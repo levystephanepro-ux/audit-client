@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Client — Google Ads & Meta Ads</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0D0D0D;
+    --paper: #F5F3EF;
+    --accent: #3B5BDB;
+    --accent-light: #EEF2FF;
+    --accent-dark: #2845BB;
+    --google: #EA4335;
+    --meta: #1877F2;
+    --success: #087F5B;
+    --muted: #6B7280;
+    --border: #E2DDD6;
+    --white: #FFFFFF;
+    --warn: #D97706;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    background: var(--ink);
+    color: var(--white);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+  }
+  .logo span { color: var(--accent); }
+  .header-badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* ─── PROGRESS BAR ─── */
+  .progress-container {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .step-label {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--ink);
+  }
+  .step-counter {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .progress-track {
+    background: var(--border);
+    height: 4px;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    background: linear-gradient(90deg, var(--accent), #6C8EFF);
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .steps-dots {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.3s;
+  }
+  .dot.active { background: var(--accent); transform: scale(1.3); }
+  .dot.done { background: var(--success); }
+
+  /* ─── LAYOUT ─── */
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ─── STEP HERO ─── */
+  .step-hero {
+    margin-bottom: 40px;
+  }
+  .step-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .step-eyebrow .icon { font-size: 1rem; }
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin-bottom: 10px;
+  }
+  .step-subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  /* ─── FORM SECTIONS ─── */
+  .section {
+    margin-bottom: 32px;
+  }
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ─── FIELD ─── */
+  .field { margin-bottom: 20px; }
+  .field label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 7px;
+    color: var(--ink);
+  }
+  .field label .required { color: var(--accent); margin-left: 2px; }
+  .field label .hint {
+    font-weight: 400;
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-left: 6px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  select,
+  textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--white);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59,91,219,0.12);
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-size: 18px; padding-right: 42px; cursor: pointer; }
+  textarea { resize: vertical; min-height: 100px; }
+
+  /* ─── INLINE GRID ─── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* ─── CHIPS / CHECKBOXES ─── */
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip input { display: none; }
+  .chip label {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 99px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+    background: var(--white);
+    user-select: none;
+    margin: 0;
+  }
+  .chip input:checked + label {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+  .chip label:hover { border-color: var(--accent); }
+
+  /* ─── PLATFORM CARDS ─── */
+  .platform-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .pcard input { display: none; }
+  .pcard label {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 20px;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--white);
+    margin: 0;
+  }
+  .pcard input:checked + label { border-color: var(--accent); background: var(--accent-light); }
+  .pcard label:hover { border-color: var(--accent); }
+  .pcard-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+  .pcard-icon.google { background: #FEF2F2; }
+  .pcard-icon.meta { background: #EFF6FF; }
+  .pcard-icon.both { background: #F5F3FF; }
+  .pcard-text strong { display: block; font-size: 0.9rem; font-weight: 600; }
+  .pcard-text span { font-size: 0.78rem; color: var(--muted); }
+
+  /* ─── BUDGET SLIDER ─── */
+  .budget-display {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .budget-amount {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.03em;
+  }
+  .budget-period { font-size: 0.8rem; color: var(--muted); }
+  input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 6px;
+    background: linear-gradient(90deg, var(--accent) var(--pct, 30%), var(--border) var(--pct, 30%));
+    border-radius: 99px;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  input[type="range"]:focus { box-shadow: none; border: none; }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid #fff;
+    box-shadow: 0 2px 8px rgba(59,91,219,0.35);
+    cursor: pointer;
+  }
+  .budget-scale {
+    display: flex; justify-content: space-between;
+    font-size: 0.72rem; color: var(--muted); margin-top: 8px;
+  }
+
+  /* ─── RADIO GROUP ─── */
+  .radio-group { display: flex; flex-direction: column; gap: 10px; }
+  .radio-item input { display: none; }
+  .radio-item label {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.18s;
+    background: var(--white);
+    margin: 0;
+  }
+  .radio-item input:checked + label { border-color: var(--accent); background: var(--accent-light); }
+  .radio-dot {
+    width: 18px; height: 18px; min-width: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    margin-top: 1px;
+    transition: all 0.18s;
+    position: relative;
+  }
+  .radio-item input:checked + label .radio-dot {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+  .radio-item input:checked + label .radio-dot::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .radio-content strong { display: block; font-size: 0.88rem; font-weight: 600; }
+  .radio-content span { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+
+  /* ─── INFO BOX ─── */
+  .info-box {
+    background: var(--accent-light);
+    border: 1px solid rgba(59,91,219,0.2);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex; gap: 12px; align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .info-box .icon { font-size: 1.1rem; margin-top: 1px; }
+  .info-box p { font-size: 0.82rem; color: #2845BB; line-height: 1.5; }
+  .info-box strong { font-weight: 600; }
+
+  /* ─── BUTTONS ─── */
+  .btn-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 36px; gap: 12px;
+  }
+  .btn-next, .btn-submit {
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 15px 32px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .btn-next:hover, .btn-submit:hover { background: var(--accent); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,91,219,0.3); }
+  .btn-submit { background: var(--success); }
+  .btn-submit:hover { background: #065F46; }
+  .btn-prev {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .btn-prev:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* ─── STEP PANELS ─── */
+  .step-panel { display: none; animation: fadeSlide 0.35s ease; }
+  .step-panel.active { display: block; }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ─── SUCCESS SCREEN ─── */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .success-screen.active { display: block; animation: fadeSlide 0.4s ease; }
+  .success-icon {
+    width: 80px; height: 80px;
+    background: #D1FAE5;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.5rem;
+    margin: 0 auto 28px;
+  }
+  .success-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+  }
+  .success-sub { color: var(--muted); font-size: 0.95rem; line-height: 1.6; max-width: 480px; margin: 0 auto 32px; }
+  .success-steps {
+    display: flex; flex-direction: column; gap: 12px;
+    max-width: 420px; margin: 0 auto 36px;
+    text-align: left;
+  }
+  .sst {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+  }
+  .sst-num {
+    width: 32px; height: 32px; min-width: 32px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sst-text strong { display: block; font-size: 0.85rem; font-weight: 600; }
+  .sst-text span { font-size: 0.78rem; color: var(--muted); }
+  .audit-badge {
+    background: linear-gradient(135deg, var(--ink), #2845BB);
+    color: #fff;
+    border-radius: 16px;
+    padding: 24px 32px;
+    max-width: 420px;
+    margin: 0 auto;
+    text-align: left;
+  }
+  .audit-badge p { font-size: 0.82rem; opacity: 0.75; margin-bottom: 4px; font-weight: 500; }
+  .audit-badge strong { font-family: 'Syne', sans-serif; font-size: 1.3rem; display: block; }
+
+  /* ─── URGENCY STRIP ─── */
+  .urgency-strip {
+    background: var(--warn);
+    color: #fff;
+    text-align: center;
+    padding: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 560px) {
+    .header { padding: 16px 20px; }
+    .progress-container { padding: 14px 20px; }
+    .container { padding: 32px 16px 60px; }
+    .platform-cards { grid-template-columns: 1fr; }
+    .btn-row { flex-direction: column-reverse; }
+    .btn-next, .btn-submit, .btn-prev { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="urgency-strip">
+  🎁 Audit gratuit offert — valeur 350€ — pour toute demande complète reçue ce mois-ci
+</div>
+
+<header class="header">
+  <div class="logo">Audit<span>Client</span></div>
+  <div class="header-badge">Audit Gratuit Inclus</div>
+</header>
+
+<div class="progress-container">
+  <div class="progress-meta">
+    <span class="step-label" id="progressLabel">Étape 1 — Votre entreprise</span>
+    <span class="step-counter" id="progressCounter">1 / 6</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill" style="width:16.6%"></div>
+  </div>
+  <div class="steps-dots" id="stepsDots"></div>
+</div>
+
+<div class="container">
+
+  <!-- ══════════════ STEP 1 — ENTREPRISE ══════════════ -->
+  <div class="step-panel active" id="step1">
+    <div class="step-hero">
+      <div class="step-eyebrow"><span class="icon">🏢</span> Informations générales</div>
+      <h1 class="step-title">Parlez-nous de votre entreprise</h1>
+      <p class="step-subtitle">Ces informations nous permettent de contextualiser votre audit et de vous proposer une stratégie adaptée à votre secteur.</p>
+    </div>
+
+    <div class="info-box">
+      <span class="icon">💡</span>
+      <p><strong>Pourquoi ces questions ?</strong> L'audit gratuit est personnalisé selon votre secteur, vos concurrents, et votre positionnement. Plus vos réponses sont précises, plus les recommandations seront actionnables.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Contact & Identité</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Prénom & Nom <span class="required">*</span></label>
+          <input type="text" id="contactName" placeholder="Jean Dupont" required>
+        </div>
+        <div class="field">
+          <label>Fonction / Poste</label>
+          <input type="text" id="contactRole" placeholder="Directeur marketing, CEO…">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Email professionnel <span class="required">*</span></label>
+          <input type="email" id="contactEmail" placeholder="jean@entreprise.fr" required>
+        </div>
+        <div class="field">
+          <label>Téléphone</label>
+          <input type="tel" id="contactPhone" placeholder="+33 6 …">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">L'entreprise</div>
+      <div class="field">
+        <label>Nom de l'entreprise <span class="required">*</span></label>
+        <input type="text" id="companyName" placeholder="Acme SAS" required>
+      </div>
+      <div class="field">
+        <label>Site web</label>
+        <input type="url" id="companyUrl" placeholder="https://www.votreSite.fr">
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Secteur d'activité <span class="required">*</span></label>
+          <select id="companySector">
+            <option value="">— Sélectionner —</option>
+            <option>E-commerce / Retail</option>
+            <option>Services B2B</option>
+            <option>Services B2C</option>
+            <option>Immobilier</option>
+            <option>Santé / Bien-être</option>
+            <option>Formation / E-learning</option>
+            <option>Restauration / Food</option>
+            <option>Mode / Beauté</option>
+            <option>Tech / SaaS</option>
+            <option>Tourisme / Hôtellerie</option>
+            <option>Finance / Assurance</option>
+            <option>Artisanat / Local</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Taille de l'équipe</label>
+          <select id="companySize">
+            <option value="">— Sélectionner —</option>
+            <option>Indépendant / Freelance</option>
+            <option>2–10 personnes</option>
+            <option>11–50 personnes</option>
+            <option>51–200 personnes</option>
+            <option>+200 personnes</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Décrivez votre activité en 2–3 phrases <span class="required">*</span><span class="hint">(produits, services, cible…)</span></label>
+        <textarea id="companyDesc" placeholder="Nous vendons des formations en ligne pour les professionnels RH…" rows="3"></textarea>
+      </div>
+      <div class="field">
+        <label>Zone géographique cible</label>
+        <div class="chips">
+          <div class="chip"><input type="checkbox" id="geo1" name="geo" value="local"><label for="geo1">📍 Local / Ville</label></div>
+          <div class="chip"><input type="checkbox" id="geo2" name="geo" value="regional"><label for="geo2">🗺️ Régional</label></div>
+          <div class="chip"><input type="checkbox" id="geo3" name="geo" value="france"><label for="geo3">🇫🇷 France entière</label></div>
+          <div class="chip"><input type="checkbox" id="geo4" name="geo" value="europe"><label for="geo4">🇪🇺 Europe</label></div>
+          <div class="chip"><input type="checkbox" id="geo5" name="geo" value="monde"><label for="geo5">🌍 International</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <div></div>
+      <button class="btn-next" onclick="goTo(2)">Continuer <span>→</span></button>
+    </div>
+  </div>
+
+  <!-- ══════════════ STEP 2 — PLATEFORMES & OBJECTIFS ══════════════ -->
+  <div class="step-panel" id="step2">
+    <div class="step-hero">
+      <div class="step-eyebrow"><span class="icon">🎯</span> Plateformes & Objectifs</div>
+      <h1 class="step-title">Où et pourquoi vous souhaitez diffuser ?</h1>
+      <p class="step-subtitle">Chaque plateforme a ses forces. Nous allons identifier la meilleure stratégie selon vos objectifs commerciaux.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Plateformes souhaitées</div>
+      <div class="platform-cards">
+        <div class="pcard">
+          <input type="checkbox" id="plt-google" name="platform" value="google">
+          <label for="plt-google">
+            <div class="pcard-icon google">🔍</div>
+            <div class="pcard-text"><strong>Google Ads</strong><span>Search, Display, Shopping, YouTube</span></div>
+          </label>
+        </div>
+        <div class="pcard">
+          <input type="checkbox" id="plt-meta" name="platform" value="meta">
+          <label for="plt-meta">
+            <div class="pcard-icon meta">📘</div>
+            <div class="pcard-text"><strong>Meta Ads</strong><span>Facebook, Instagram, Reels, Stories</span></div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Objectifs principaux <span style="font-size:0.75rem; color:var(--muted); font-weight:400;">(plusieurs choix possibles)</span></div>
+      <div class="chips">
+        <div class="chip"><input type="checkbox" id="obj1" name="obj" value="notoriete"><label for="obj1">📣 Notoriété de marque</label></div>
+        <div class="chip"><input type="checkbox" id="obj2" name="obj" value="trafic"><label for="obj2">🌐 Trafic site web</label></div>
+        <div class="chip"><input type="checkbox" id="obj3" name="obj" value="leads"><label for="obj3">📋 Génération de leads</label></div>
+        <div class="chip"><input type="checkbox" id="obj4" name="obj" value="ventes"><label for="obj4">🛒 Ventes en ligne</label></div>
+        <div class="chip"><input type="checkbox" id="obj5" name="obj" value="appels"><label for="obj5">📞 Appels / Visites</label></div>
+        <div class="chip"><input type="checkbox" id="obj6" name="obj" value="app"><label for="obj6">📱 Téléchargements App</label></div>
+        <div class="chip"><input type="checkbox" id="obj7" name="obj" value="retargeting"><label for="obj7">🔁 Retargeting</label></div>
+        <div class="chip"><input type="checkbox" id="obj8" name="obj" value="recrutement"><label for="obj8">💼 Recrutement</label></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">KPI & Résultats attendus</div>
+      <div class="field">
+        <label>Quel est votre objectif principal chiffré ? <span class="hint">(ex: 50 leads/mois, 30% d'augmentation des ventes…)</span></label>
+        <input type="text" id="kpiTarget" placeholder="Ex : 80 leads qualifiés par mois à 15€ max le lead">
+      </div>
+      <div class="field">
+        <label>Avez-vous un coût d'acquisition cible (CPA) ?</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" name="cpa" id="cpa1" value="oui">
+            <label for="cpa1"><span class="radio-dot"></span><div class="radio-content"><strong>Oui, je connais mon CPA cible</strong><span>Je sais combien je peux investir pour un client / lead</span></div></label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" name="cpa" id="cpa2" value="approximatif">
+            <label for="cpa2"><span class="radio-dot"></span><div class="radio-content"><strong>Approximativement</strong><span>J'ai une idée mais je ne suis pas précis</span></div></label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" name="cpa" id="cpa3" value="non">
+            <label for="cpa3"><span class="radio-dot"></span><div class="radio-content"><strong>Non, j'ai besoin de vous pour le définir</strong><span>L'audit nous permettra de l'estimer ensemble</span></div></label>
+          </div>
+        </div>
+      </div>
+      <div class="field" id="cpaValueField" style="display:none;">
+        <label>CPA cible approximatif</label>
+        <input type="text" id="cpaValue" placeholder="Ex : 20€ max par lead, ROAS cible 4x…">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-prev" onclick="goTo(1)">← Retour</button>
+      <button class="btn-next" onclick="goTo(3)">Continuer →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ STEP 3 — BUDGET ══════════════ -->
+  <div class="step-panel" id="step3">
+    <div class="step-hero">
+      <div class="step-eyebrow"><span class="icon">💰</span> Budget publicitaire</div>
+      <h1 class="step-title">Quel investissement envisagez-vous ?</h1>
+      <p class="step-subtitle">Le budget média conditionne la structure des campagnes, les enchères, et la vitesse d'apprentissage. Soyez aussi précis que possible.</p>
+    </div>
+
+    <div class="info-box">
+      <span class="icon">🔒</span>
+      <p><strong>Information confidentielle.</strong> Ces données sont uniquement utilisées pour dimensionner votre stratégie et estimer le potentiel de vos campagnes. Elles ne sont jamais partagées.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Budget mensuel total (média)</div>
+      <div class="budget-display">
+        <span class="budget-amount" id="budgetDisplay">1 500€</span>
+        <span class="budget-period">/ mois toutes plateformes</span>
+      </div>
+      <input type="range" id="budgetSlider" min="0" max="12" value="3" oninput="updateBudget(this.value)">
+      <div class="budget-scale">
+        <span>300€</span><span>1k€</span><span>3k€</span><span>5k€</span><span>10k€</span><span>20k€</span><span>50k€+</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Répartition souhaitée</div>
+      <div class="radio-group">
+        <div class="radio-item">
+          <input type="radio" name="split" id="s1" value="google_focus">
+          <label for="s1"><span class="radio-dot"></span><div class="radio-content"><strong>Priorité Google Ads (70/30)</strong><span>Capture de demande existante, intentions d'achat fortes</span></div></label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="split" id="s2" value="meta_focus">
+          <label for="s2"><span class="radio-dot"></span><div class="radio-content"><strong>Priorité Meta Ads (70/30)</strong><span>Création de demande, ciblage audiences, notoriété sociale</span></div></label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="split" id="s3" value="50_50">
+          <label for="s3"><span class="radio-dot"></span><div class="radio-content"><strong>Équilibré 50/50</strong><span>Couverture complète du parcours client</span></div></label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="split" id="s4" value="conseil">
+          <label for="s4"><span class="radio-dot"></span><div class="radio-content"><strong>Je me fie à votre recommandation</strong><span>Laissez l'audit guider la répartition optimale</span></div></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Délais & contraintes budgétaires</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Quand souhaitez-vous lancer ?</label>
+          <select id="launchDelay">
+            <option value="">— Sélectionner —</option>
+            <option>Dès que possible (< 2 semaines)</option>
+            <option>Dans 1 mois</option>
+            <option>Dans 2–3 mois</option>
+            <option>Pas encore décidé</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Budget gestion / honoraires</label>
+          <select id="mgmtBudget">
+            <option value="">— Sélectionner —</option>
+            <option>Inclus dans le budget média</option>
+            <option>Budget séparé envisagé</option>
+            <option>À définir selon devis</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-prev" onclick="goTo(2)">← Retour</button>
+      <button class="btn-next" onclick="goTo(4)">Continuer →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ STEP 4 — SITUATION ACTUELLE ══════════════ -->
+  <div class="step-panel" id="step4">
+    <div class="step-hero">
+      <div class="step-eyebrow"><span class="icon">📊</span> Situation actuelle</div>
+      <h1 class="step-title">Où en êtes-vous aujourd'hui ?</h1>
+      <p class="step-subtitle">Comprendre votre point de départ nous permet d'évaluer le potentiel d'amélioration et les actions prioritaires de l'audit.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Expérience publicitaire</div>
+      <div class="radio-group">
+        <div class="radio-item">
+          <input type="radio" name="adExp" id="exp0" value="jamais">
+          <label for="exp0"><span class="radio-dot"></span><div class="radio-content"><strong>Première campagne</strong><span>Aucune expérience de publicité payante jusqu'ici</span></div></label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="adExp" id="exp1" value="auto">
+          <label for="exp1"><span class="radio-dot"></span><div class="radio-content"><strong>Géré en interne</strong><span>J'ai ou quelqu'un dans mon équipe gère déjà les campagnes</span></div></label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="adExp" id="exp2" value="agence">
+          <label for="exp2"><span class="radio-dot"></span><div class="radio-content"><strong>Géré par une agence / freelance</strong><span>Je veux changer ou améliorer ce qui existe</span></div></label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="adExp" id="exp3" value="stoppe">
+          <label for="exp3"><span class="radio-dot"></span><div class="radio-content"><strong>Campagnes stoppées</strong><span>J'ai déjà investi mais les résultats n'étaient pas au rendez-vous</span></div></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Comptes & Accès existants</div>
+      <div class="chips">
+        <div class="chip"><input type="checkbox" id="acc1" name="acc"><label for="acc1">✅ Google Ads actif</label></div>
+        <div class="chip"><input type="checkbox" id="acc2" name="acc"><label for="acc2">✅ Meta Business Manager</label></div>
+        <div class="chip"><input type="checkbox" id="acc3" name="acc"><label for="acc3">📈 Google Analytics / GA4</label></div>
+        <div class="chip"><input type="checkbox" id="acc4" name="acc"><label for="acc4">🔍 Google Search Console</label></div>
+        <div class="chip"><input type="checkbox" id="acc5" name="acc"><label for="acc5">🎯 Pixel Meta installé</label></div>
+        <div class="chip"><input type="checkbox" id="acc6" name="acc"><label for="acc6">🏷️ Google Tag Manager</label></div>
+        <div class="chip"><input type="checkbox" id="acc7" name="acc"><label for="acc7">🔗 CRM connecté</label></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Performances actuelles</div>
+      <div class="field">
+        <label>Dépense mensuelle actuelle en publicité <span class="hint">(si applicable)</span></label>
+        <input type="text" id="currentSpend" placeholder="Ex : 800€/mois sur Google, 0 sur Meta">
+      </div>
+      <div class="field">
+        <label>Résultats connus à date <span class="hint">(coût/lead, ROAS, CTR, taux de conversion…)</span></label>
+        <textarea id="currentResults" placeholder="Ex : CPA moyen de 45€, taux de conversion 1.2%, ROAS 2.1x…" rows="3"></textarea>
+      </div>
+      <div class="field">
+        <label>Principaux problèmes constatés ou raisons de vouloir changer</label>
+        <textarea id="currentProblems" placeholder="Ex : coûts trop élevés, mauvaise qualité des leads, ROI insuffisant, manque de transparence agence…" rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Tracking & Conversions</div>
+      <div class="radio-group">
+        <div class="radio-item">
+          <input type="radio" name="tracking" id="tr1" value="complet">
+          <label for="tr1"><span class="radio-dot"></span><div class="radio-content"><strong>Tracking complet en place</strong><span>Conversions, événements, et attribution configurés correctement</span></div></label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="tracking" id="tr2" value="partiel">
+          <label for="tr2"><span class="radio-dot"></span><div class="radio-content"><strong>Tracking partiel</strong><span>Quelques événements trackés mais pas toutes les conversions</span></div></label>
+        </div>
+        <div class="radio-item">
+          <input type="radio" name="tracking" id="tr3" value="aucun">
+          <label for="tr3"><span class="radio-dot"></span><div class="radio-content"><strong>Pas de tracking</strong><span>Aucun suivi de conversion en place — l'audit couvrira ce point en priorité</span></div></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-prev" onclick="goTo(3)">← Retour</button>
+      <button class="btn-next" onclick="goTo(5)">Continuer →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ STEP 5 — CIBLE & CONCURRENCE ══════════════ -->
+  <div class="step-panel" id="step5">
+    <div class="step-hero">
+      <div class="step-eyebrow"><span class="icon">🎯</span> Audience & Concurrence</div>
+      <h1 class="step-title">Qui ciblez-vous et face à qui ?</h1>
+      <p class="step-subtitle">Définir votre persona et analyser vos concurrents est la base d'une stratégie publicitaire qui convertit vraiment.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Profil client idéal (Persona)</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Âge cible</label>
+          <select id="targetAge">
+            <option value="">— Sélectionner —</option>
+            <option>18–24 ans</option>
+            <option>25–34 ans</option>
+            <option>35–44 ans</option>
+            <option>45–54 ans</option>
+            <option>55–64 ans</option>
+            <option>65+ ans</option>
+            <option>Tous âges</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Genre cible</label>
+          <select id="targetGender">
+            <option value="">— Sélectionner —</option>
+            <option>Hommes principalement</option>
+            <option>Femmes principalement</option>
+            <option>Tous genres</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Décrivez votre client idéal <span class="hint">(situation, motivations, douleurs, comportements…)</span></label>
+        <textarea id="personaDesc" placeholder="Ex : Femme 30–45 ans, active, cherche des solutions gain de temps, sensible au prix/qualité, présente sur Instagram et Pinterest, achète souvent depuis mobile le soir…" rows="4"></textarea>
+      </div>
+      <div class="field">
+        <label>Type de cycle de vente</label>
+        <div class="chips">
+          <div class="chip"><input type="checkbox" id="cycle1" name="cycle" value="impulsif"><label for="cycle1">⚡ Achat impulsif</label></div>
+          <div class="chip"><input type="checkbox" id="cycle2" name="cycle" value="court"><label for="cycle2">📅 Cycle court (< 1 sem)</label></div>
+          <div class="chip"><input type="checkbox" id="cycle3" name="cycle" value="moyen"><label for="cycle3">🗓️ Cycle moyen (1–4 sem)</label></div>
+          <div class="chip"><input type="checkbox" id="cycle4" name="cycle" value="long"><label for="cycle4">📆 Cycle long (> 1 mois)</label></div>
+          <div class="chip"><input type="checkbox" id="cycle5" name="cycle" value="abonnement"><label for="cycle5">🔄 Abonnement / Récurrent</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Concurrence</div>
+      <div class="field">
+        <label>Citez vos 2–3 principaux concurrents <span class="hint">(avec URL si possible)</span></label>
+        <textarea id="competitors" placeholder="Ex : concurrent1.fr, concurrent2.com — ils ont plus de budget, misent beaucoup sur le retargeting…" rows="3"></textarea>
+      </div>
+      <div class="field">
+        <label>Votre avantage concurrentiel principal</label>
+        <input type="text" id="usp" placeholder="Ex : livraison offerte, service client 24/7, expertise locale, prix imbattable…">
+      </div>
+      <div class="field">
+        <label>Votre panier moyen / valeur d'une commande</label>
+        <input type="text" id="avgOrder" placeholder="Ex : 85€ en e-commerce / 2 500€ pour un service B2B">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Créatifs & Visuels</div>
+      <div class="field">
+        <label>Avez-vous des créatifs / visuels disponibles ?</label>
+        <div class="chips">
+          <div class="chip"><input type="checkbox" id="crea1" name="crea" value="photos"><label for="crea1">📸 Photos produits/équipe</label></div>
+          <div class="chip"><input type="checkbox" id="crea2" name="crea" value="videos"><label for="crea2">🎬 Vidéos</label></div>
+          <div class="chip"><input type="checkbox" id="crea3" name="crea" value="logo"><label for="crea3">🎨 Logo / Charte graphique</label></div>
+          <div class="chip"><input type="checkbox" id="crea4" name="crea" value="charteok"><label for="crea4">✅ Charte validée</label></div>
+          <div class="chip"><input type="checkbox" id="crea5" name="crea" value="rien"><label for="crea5">❌ Rien pour l'instant</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-prev" onclick="goTo(4)">← Retour</button>
+      <button class="btn-next" onclick="goTo(6)">Continuer →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ STEP 6 — INFOS COMPLÉMENTAIRES & ENVOI ══════════════ -->
+  <div class="step-panel" id="step6">
+    <div class="step-hero">
+      <div class="step-eyebrow"><span class="icon">🚀</span> Finalisation</div>
+      <h1 class="step-title">Dernières informations & envoi</h1>
+      <p class="step-subtitle">Quelques questions finales pour personnaliser au maximum votre audit gratuit et votre devis.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Attentes & Priorités</div>
+      <div class="field">
+        <label>Qu'est-ce qui est le plus important pour vous dans cette collaboration ?</label>
+        <div class="chips">
+          <div class="chip"><input type="checkbox" id="prio1" name="prio"><label for="prio1">📈 ROI rapide</label></div>
+          <div class="chip"><input type="checkbox" id="prio2" name="prio"><label for="prio2">🔍 Transparence totale</label></div>
+          <div class="chip"><input type="checkbox" id="prio3" name="prio"><label for="prio3">💬 Reporting régulier</label></div>
+          <div class="chip"><input type="checkbox" id="prio4" name="prio"><label for="prio4">🤝 Relation de confiance</label></div>
+          <div class="chip"><input type="checkbox" id="prio5" name="prio"><label for="prio5">📐 Stratégie long terme</label></div>
+          <div class="chip"><input type="checkbox" id="prio6" name="prio"><label for="prio6">⚡ Réactivité</label></div>
+          <div class="chip"><input type="checkbox" id="prio7" name="prio"><label for="prio7">💡 Créativité / Innovation</label></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Avez-vous une contrainte ou deadline particulière ?</label>
+        <input type="text" id="deadline" placeholder="Ex : lancement produit prévu le 15 sept, promotions Black Friday…">
+      </div>
+
+      <div class="field">
+        <label>Quel est votre principal frein actuel à vous lancer ?</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" name="frein" id="fr1" value="budget">
+            <label for="fr1"><span class="radio-dot"></span><div class="radio-content"><strong>Incertitude sur le retour sur investissement</strong><span>Je veux être sûr que l'investissement vaut le coup avant de me lancer</span></div></label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" name="frein" id="fr2" value="temps">
+            <label for="fr2"><span class="radio-dot"></span><div class="radio-content"><strong>Manque de temps ou de ressources internes</strong><span>Je veux déléguer mais j'ai besoin d'un partenaire de confiance</span></div></label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" name="frein" id="fr3" value="connaissance">
+            <label for="fr3"><span class="radio-dot"></span><div class="radio-content"><strong>Méconnaissance des plateformes</strong><span>Je ne sais pas encore bien ce qui est possible ou recommandé</span></div></label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" name="frein" id="fr4" value="mauvaise_exp">
+            <label for="fr4"><span class="radio-dot"></span><div class="radio-content"><strong>Mauvaise expérience passée</strong><span>Une précédente collaboration n'a pas donné les résultats espérés</span></div></label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" name="frein" id="fr5" value="aucun">
+            <label for="fr5"><span class="radio-dot"></span><div class="radio-content"><strong>Pas de frein — je suis prêt à démarrer</strong><span>Je cherche simplement le bon partenaire</span></div></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Informations complémentaires</div>
+      <div class="field">
+        <label>Comment avez-vous entendu parler de nous ?</label>
+        <select id="source">
+          <option value="">— Sélectionner —</option>
+          <option>Recommandation / Bouche à oreille</option>
+          <option>LinkedIn</option>
+          <option>Google (recherche)</option>
+          <option>Meta / Instagram</option>
+          <option>Un événement / networking</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Y a-t-il autre chose que vous souhaitez nous communiquer avant l'audit ?</label>
+        <textarea id="additionalInfo" placeholder="Informations spécifiques sur votre marché, contraintes techniques, accès à partager, questions particulières…" rows="4"></textarea>
+      </div>
+      <div class="field">
+        <label>Acceptez-vous notre politique de confidentialité ? <span class="required">*</span></label>
+        <div class="chips">
+          <div class="chip">
+            <input type="checkbox" id="rgpd" required>
+            <label for="rgpd">✅ J'accepte que mes données soient utilisées pour établir un devis et réaliser l'audit</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box" style="background:#F0FDF4; border-color:rgba(8,127,91,0.2);">
+      <span class="icon">🎁</span>
+      <p style="color:#065F46;"><strong>Ce qui vous attend après l'envoi :</strong><br>
+      ① Confirmation immédiate par email · ② Audit complet sous 48h ouvrées · ③ Appel stratégique 30 min pour présenter les recommandations · ④ Devis personnalisé sans engagement</p>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-prev" onclick="goTo(5)">← Retour</button>
+      <button class="btn-submit" onclick="submitForm()">🚀 Envoyer & Obtenir l'Audit Gratuit</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ SUCCESS ══════════════ -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">✅</div>
+    <h2 class="success-title">Questionnaire envoyé !</h2>
+    <p class="success-sub">Merci d'avoir pris le temps de nous détailler votre projet. Votre audit personnalisé est en cours de préparation.</p>
+
+    <div class="success-steps">
+      <div class="sst">
+        <div class="sst-num">1</div>
+        <div class="sst-text"><strong>Confirmation email sous 5 min</strong><span>Récapitulatif de vos réponses + prochaines étapes</span></div>
+      </div>
+      <div class="sst">
+        <div class="sst-num">2</div>
+        <div class="sst-text"><strong>Audit livré sous 48h ouvrées</strong><span>Analyse de votre potentiel Google Ads & Meta Ads</span></div>
+      </div>
+      <div class="sst">
+        <div class="sst-num">3</div>
+        <div class="sst-text"><strong>Appel stratégique 30 min</strong><span>Présentation des insights et réponses à vos questions</span></div>
+      </div>
+      <div class="sst">
+        <div class="sst-num">4</div>
+        <div class="sst-text"><strong>Devis sans engagement</strong><span>Proposition tarifaire adaptée à votre contexte</span></div>
+      </div>
+    </div>
+
+    <div class="audit-badge">
+      <p>Audit gratuit inclus — valeur</p>
+      <strong>350€ offerts 🎁</strong>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  // ─── STATE ───
+  const STEPS = 6;
+  const STEP_LABELS = [
+    "Votre entreprise",
+    "Plateformes & Objectifs",
+    "Budget publicitaire",
+    "Situation actuelle",
+    "Audience & Concurrence",
+    "Finalisation & Envoi"
+  ];
+  let currentStep = 1;
+
+  // ─── INIT ───
+  function init() {
+    const dots = document.getElementById('stepsDots');
+    for(let i=1; i<=STEPS; i++){
+      const d = document.createElement('div');
+      d.className = 'dot' + (i===1?' active':'');
+      d.id = 'dot'+i;
+      dots.appendChild(d);
+    }
+    updateProgress();
+
+    // CPA reveal
+    document.querySelectorAll('input[name="cpa"]').forEach(r => {
+      r.addEventListener('change', () => {
+        document.getElementById('cpaValueField').style.display =
+          (r.value === 'oui' || r.value === 'approximatif') ? 'block' : 'none';
+      });
+    });
+
+    // Budget slider
+    updateBudget(document.getElementById('budgetSlider').value);
+  }
+
+  // ─── NAVIGATION ───
+  function goTo(step) {
+    document.getElementById('step'+currentStep).classList.remove('active');
+    document.getElementById('dot'+currentStep).classList.remove('active');
+    document.getElementById('dot'+currentStep).classList.add('done');
+
+    if(step <= currentStep){
+      document.getElementById('dot'+step).classList.remove('done');
+    }
+
+    currentStep = step;
+    const panel = document.getElementById('step'+currentStep);
+    if(panel){
+      panel.classList.add('active');
+      document.getElementById('dot'+currentStep).classList.add('active');
+      document.getElementById('dot'+currentStep).classList.remove('done');
+    }
+    updateProgress();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  function updateProgress(){
+    const pct = (currentStep / STEPS) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = 'Étape ' + currentStep + ' — ' + STEP_LABELS[currentStep-1];
+    document.getElementById('progressCounter').textContent = currentStep + ' / ' + STEPS;
+  }
+
+  // ─── BUDGET SLIDER ───
+  const BUDGETS = [300, 500, 1000, 1500, 3000, 5000, 8000, 10000, 15000, 20000, 35000, 50000, 99999];
+  const LABELS  = ['300€','500€','1 000€','1 500€','3 000€','5 000€','8 000€','10 000€','15 000€','20 000€','35 000€','50 000€','50 000€+'];
+
+  function updateBudget(v){
+    const val = parseInt(v);
+    const amount = LABELS[val];
+    document.getElementById('budgetDisplay').textContent = amount;
+    const pct = (val / (BUDGETS.length-1)) * 100;
+    document.getElementById('budgetSlider').style.setProperty('--pct', pct+'%');
+    document.getElementById('budgetSlider').style.background =
+      `linear-gradient(90deg, var(--accent) ${pct}%, var(--border) ${pct}%)`;
+  }
+
+  // ─── SUBMIT ───
+  function submitForm(){
+    const rgpd = document.getElementById('rgpd');
+    if(!rgpd.checked){
+      rgpd.closest('.field').scrollIntoView({behavior:'smooth',block:'center'});
+      rgpd.parentElement.parentElement.style.outline = '2px solid #D97706';
+      return;
+    }
+
+    // Collect data
+    const data = collectFormData();
+    console.log('Form data:', data);
+
+    // Hide last step, show success
+    document.getElementById('step6').classList.remove('active');
+    document.getElementById('successScreen').classList.add('active');
+    document.querySelector('.progress-container').style.display = 'none';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function collectFormData(){
+    const geo = [...document.querySelectorAll('input[name="geo"]:checked')].map(x=>x.value);
+    const platforms = [...document.querySelectorAll('input[name="platform"]:checked')].map(x=>x.value);
+    const objectives = [...document.querySelectorAll('input[name="obj"]:checked')].map(x=>x.value);
+    const accounts = [...document.querySelectorAll('input[name="acc"]:checked')].map(x=>x.closest('.chip').querySelector('label').textContent.trim());
+    const creatives = [...document.querySelectorAll('input[name="crea"]:checked')].map(x=>x.value);
+    const priorities = [...document.querySelectorAll('input[name="prio"]:checked')].map(x=>x.closest('.chip').querySelector('label').textContent.trim());
+    const cycles = [...document.querySelectorAll('input[name="cycle"]:checked')].map(x=>x.value);
+
+    const budgetIdx = document.getElementById('budgetSlider').value;
+
+    return {
+      contact: {
+        name: document.getElementById('contactName').value,
+        role: document.getElementById('contactRole').value,
+        email: document.getElementById('contactEmail').value,
+        phone: document.getElementById('contactPhone').value,
+      },
+      company: {
+        name: document.getElementById('companyName').value,
+        url: document.getElementById('companyUrl').value,
+        sector: document.getElementById('companySector').value,
+        size: document.getElementById('companySize').value,
+        description: document.getElementById('companyDesc').value,
+        geo: geo,
+      },
+      campaign: {
+        platforms: platforms,
+        objectives: objectives,
+        kpiTarget: document.getElementById('kpiTarget').value,
+        cpa: document.querySelector('input[name="cpa"]:checked')?.value,
+        cpaValue: document.getElementById('cpaValue').value,
+      },
+      budget: {
+        monthly: LABELS[budgetIdx],
+        split: document.querySelector('input[name="split"]:checked')?.value,
+        launchDelay: document.getElementById('launchDelay').value,
+        mgmtBudget: document.getElementById('mgmtBudget').value,
+      },
+      currentSituation: {
+        adExperience: document.querySelector('input[name="adExp"]:checked')?.value,
+        accounts: accounts,
+        currentSpend: document.getElementById('currentSpend').value,
+        currentResults: document.getElementById('currentResults').value,
+        currentProblems: document.getElementById('currentProblems').value,
+        tracking: document.querySelector('input[name="tracking"]:checked')?.value,
+      },
+      audience: {
+        age: document.getElementById('targetAge').value,
+        gender: document.getElementById('targetGender').value,
+        personaDesc: document.getElementById('personaDesc').value,
+        saleCycles: cycles,
+        competitors: document.getElementById('competitors').value,
+        usp: document.getElementById('usp').value,
+        avgOrder: document.getElementById('avgOrder').value,
+        creatives: creatives,
+      },
+      extras: {
+        priorities: priorities,
+        deadline: document.getElementById('deadline').value,
+        mainFrein: document.querySelector('input[name="frein"]:checked')?.value,
+        source: document.getElementById('source').value,
+        additionalInfo: document.getElementById('additionalInfo').value,
+      }
+    };
+  }
+
+  // ─── BOOT ───
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
