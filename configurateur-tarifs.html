@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurateur AuditClient</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0D0D0D;--paper:#F5F3EF;--accent:#3B5BDB;--al:#EEF2FF;
+  --ok:#087F5B;--ok-bg:#F0FDF4;--warn:#D97706;--warn-bg:#FFFBEB;
+  --muted:#6B7280;--border:#E2DDD6;--white:#FFFFFF;
+  --red:#EF4444;--red-bg:#FEF2F2;--gold:#F59E0B;
+}
+body{font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+
+/* HEADER */
+.hdr{background:var(--ink);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem}
+.logo span{color:var(--accent)}
+.hdr-sub{font-size:0.75rem;color:#9CA3AF;margin-top:1px}
+.saved{font-size:0.75rem;color:var(--ok);font-weight:600;display:none;align-items:center;gap:4px}
+.saved.show{display:flex}
+
+/* LAYOUT */
+.wrap{max-width:940px;margin:0 auto;padding:28px 18px 80px}
+
+/* TABS */
+.tabs{display:flex;gap:3px;margin-bottom:24px;background:var(--white);border-radius:12px;padding:4px;border:1px solid var(--border)}
+.tab{flex:1;padding:9px 6px;text-align:center;border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:500;color:var(--muted);transition:all .2s;border:none;background:none;white-space:nowrap}
+.tab.active{background:var(--ink);color:#fff;font-weight:600}
+.tp{display:none}.tp.active{display:block}
+
+/* CARD */
+.card{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:22px;margin-bottom:18px}
+.ct{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:3px}
+.cs{font-size:.8rem;color:var(--muted);margin-bottom:18px}
+.sl{font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+
+/* FORM */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.83rem;font-weight:600;margin-bottom:5px}
+.hint{font-weight:400;color:var(--muted);font-size:.76rem;margin-left:5px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:560px){.g2,.g3{grid-template-columns:1fr}}
+input[type=number],input[type=text],select,textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-family:'Inter',sans-serif;font-size:.87rem;color:var(--ink);background:var(--white);outline:none;transition:border-color .2s,box-shadow .2s;appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,91,219,.1)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:16px;padding-right:36px}
+textarea{resize:vertical;min-height:80px}
+.ew{position:relative}.ew::after{content:'€';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.83rem;pointer-events:none}
+.ew input{padding-right:24px}
+
+/* TRANCHE */
+.tr-row{display:grid;grid-template-columns:24px 1fr 14px 1fr 14px 1fr 32px;gap:7px;align-items:center;margin-bottom:8px}
+.tr-lbl{font-size:.72rem;color:var(--muted);font-weight:700;text-align:center}
+.tr-sep{font-size:.82rem;color:var(--muted);text-align:center}
+
+/* PRESTATION ROWS */
+.prest-row{display:grid;grid-template-columns:32px 1fr 90px 80px 70px 32px;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:var(--paper);border-radius:10px;border:1px solid var(--border)}
+.prest-row.header{background:var(--ink);border-color:var(--ink);border-radius:8px;padding:7px 12px;margin-bottom:10px}
+.prest-row.header span{font-size:.75rem;font-weight:700;color:#9CA3AF;text-align:center}
+.prest-row.header span:first-child{color:#9CA3AF;text-align:left}
+.drag-handle{cursor:grab;color:var(--muted);font-size:1rem;text-align:center;user-select:none}
+.prest-row input[type=text]{background:var(--white);border:1.5px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.84rem}
+.prest-row input[type=number]{background:var(--white);border:1.5px solid var(--border);border-radius:6px;padding:6px 8px;font-size:.84rem;text-align:right}
+.prest-toggle{width:42px;height:22px;background:var(--border);border-radius:99px;cursor:pointer;position:relative;transition:background .2s;border:none;flex-shrink:0}
+.prest-toggle.on{background:var(--ok)}
+.prest-toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.prest-toggle.on::after{transform:translateX(20px)}
+.include-check{width:18px;height:18px;border-radius:4px;border:2px solid var(--border);cursor:pointer;appearance:none;background:var(--white);transition:all .15s;flex-shrink:0}
+.include-check:checked{background:var(--ok);border-color:var(--ok)}
+.include-check:checked::after{content:'✓';color:#fff;font-size:.65rem;display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+
+/* BTNS */
+.btn-add{display:inline-flex;align-items:center;gap:6px;background:var(--al);color:var(--accent);border:1.5px dashed var(--accent);border-radius:8px;padding:8px 14px;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .2s;margin-top:4px}
+.btn-add:hover{background:var(--accent);color:#fff}
+.btn-del{background:none;border:none;cursor:pointer;color:var(--red);font-size:1rem;padding:4px 6px;border-radius:6px;transition:background .15s}
+.btn-del:hover{background:var(--red-bg)}
+.btn-gen{background:var(--ok);color:#fff;border:none;border-radius:11px;padding:14px 28px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:9px;width:100%;justify-content:center;margin-top:8px}
+.btn-gen:hover{background:#065F46;transform:translateY(-1px);box-shadow:0 6px 18px rgba(8,127,91,.3)}
+.btn-gen:disabled{background:var(--muted);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-sec{background:var(--white);color:var(--ink);border:1.5px solid var(--border);border-radius:11px;padding:12px 24px;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;width:100%;justify-content:center;margin-top:8px}
+.btn-sec:hover{border-color:var(--ink)}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip input{display:none}
+.chip label{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border:1.5px solid var(--border);border-radius:99px;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .18s;background:var(--white);user-select:none}
+.chip input:checked+label{border-color:var(--accent);background:var(--al);color:var(--accent);font-weight:600}
+
+/* PLATFORM CARDS */
+.plt-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.plt-card input{display:none}
+.plt-card label{display:flex;align-items:center;gap:10px;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .18s;font-size:.84rem;font-weight:500}
+.plt-card input:checked+label{border-color:var(--accent);background:var(--al);color:var(--accent);font-weight:600}
+.plt-ic{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+
+/* PREVIEW */
+.prev-card{background:linear-gradient(135deg,#0D0D0D,#1e2d6b);border-radius:14px;padding:24px;color:#fff;margin-bottom:18px}
+.prev-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:3px}
+.prev-sub{font-size:.85rem;color:#9CA3AF;margin-bottom:18px}
+.prev-line{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.prev-line:last-child{border-bottom:none}
+.prev-ll{font-size:.85rem;color:#CBD5E1}
+.prev-lv{font-weight:700;font-size:.95rem;color:#fff}
+.prev-total{background:var(--accent);border-radius:10px;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.prev-tv{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800}
+
+/* PRESTATION PREVIEW TABLE */
+.pv-table{width:100%;border-collapse:collapse;font-size:.83rem;margin-top:8px}
+.pv-table th{background:var(--ink);color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:.76rem}
+.pv-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.pv-table tr:nth-child(even) td{background:var(--paper)}
+.pv-table .inc{color:var(--ok);font-weight:700;text-align:center}
+.pv-table .not{color:var(--muted);text-align:center}
+.pv-badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:700}
+.pv-badge.g{background:var(--ok-bg);color:var(--ok)}
+.pv-badge.r{background:var(--red-bg);color:var(--red)}
+.pv-badge.y{background:var(--warn-bg);color:var(--warn)}
+
+/* STATUS */
+.status{border-radius:9px;padding:11px 14px;font-size:.83rem;margin-top:10px;display:none;white-space:pre-wrap;line-height:1.5}
+.status.ok{background:var(--ok-bg);color:var(--ok);border:1px solid rgba(8,127,91,.2);display:block}
+.status.err{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2);display:block}
+.status.load{background:var(--al);color:var(--accent);border:1px solid rgba(59,91,219,.2);display:block}
+
+.info-box{background:var(--al);border-left:3px solid var(--accent);border-radius:8px;padding:11px 14px;font-size:.83rem;color:#2845BB;margin-bottom:14px;line-height:1.5}
+.tag{display:inline-block;background:var(--al);color:var(--accent);font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:99px;margin-left:7px}
+.tag.g{background:var(--ok-bg);color:var(--ok)}
+
+.pv-table{overflow:hidden}
+.gen-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.gen-grid{grid-template-columns:1fr}.tr-row{grid-template-columns:1fr 1fr 1fr 28px}.prest-row{grid-template-columns:28px 1fr 70px 28px}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div>
+    <div class="logo">Audit<span>Client</span> <span style="color:#9CA3AF;font-weight:400;font-size:.82rem">— Configurateur Pro</span></div>
+    <div class="hdr-sub">Tarification · Prestations · Devis personnalisé</div>
+  </div>
+  <span class="saved" id="savedInd">✓ Sauvegardé</span>
+</header>
+
+<div class="wrap">
+
+  <div class="tabs">
+    <button class="tab active" onclick="sw('tarifs')">💰 Tarifs</button>
+    <button class="tab" onclick="sw('prestations')">📋 Prestations</button>
+    <button class="tab" onclick="sw('client')">👤 Client</button>
+    <button class="tab" onclick="sw('preview')">📄 Devis & PDF</button>
+  </div>
+
+  <!-- ═══════════════ ONGLET 1 — TARIFS ═══════════════ -->
+  <div class="tp active" id="tp-tarifs">
+
+    <div class="card">
+      <div class="ct">🏷️ Tranches tarifaires</div>
+      <div class="cs">Forfait de gestion mensuel selon le budget média du client. Tout est modifiable.</div>
+      <div class="sl">Budget média mensuel → Forfait HT/mois</div>
+      <div id="tranches-wrap"></div>
+      <button class="btn-add" onclick="addTranche()">+ Ajouter une tranche</button>
+    </div>
+
+    <div class="card">
+      <div class="ct">⚙️ Frais & Suppléments</div>
+      <div class="g2">
+        <div class="field">
+          <label>Setup / Onboarding <span class="hint">one-time</span></label>
+          <div class="ew"><input type="number" id="f-setup" value="490" min="0" oninput="save();upPrev()"></div>
+        </div>
+        <div class="field">
+          <label>Supplément 2e plateforme <span class="hint">/mois</span></label>
+          <div class="ew"><input type="number" id="f-extra" value="200" min="0" oninput="save();upPrev()"></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="field">
+          <label>Surcharge tracking absent <span class="hint">one-time</span></label>
+          <div class="ew"><input type="number" id="f-track" value="150" min="0" oninput="save();upPrev()"></div>
+        </div>
+        <div class="field">
+          <label>Remise sans engagement <span class="hint">%</span></label>
+          <input type="number" id="f-disc" value="0" min="0" max="50" oninput="save();upPrev()">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">📊 Grille tarifaire calculée</div>
+      <table class="pv-table" id="grille-table">
+        <thead><tr><th>Budget média</th><th>1 plateforme</th><th>2 plateformes</th><th>+Setup</th></tr></thead>
+        <tbody id="grille-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════ ONGLET 2 — PRESTATIONS ═══════════════ -->
+  <div class="tp" id="tp-prestations">
+
+    <div class="info-box">
+      📋 <b>Personnalisez vos prestations</b> — modifiez le nom, activez/désactivez, définissez si elles sont incluses dans le forfait ou facturées en option, ajoutez un prix unitaire.
+    </div>
+
+    <div class="card">
+      <div class="ct">🔧 Prestations Google Ads</div>
+      <div class="cs">Ces prestations apparaîtront dans le devis et l'audit pour les clients avec Google Ads.</div>
+      <div class="prest-row header">
+        <span></span><span>Nom de la prestation</span>
+        <span style="text-align:center">Inclus ?</span>
+        <span style="text-align:center">Prix option</span>
+        <span style="text-align:center">Actif</span>
+        <span></span>
+      </div>
+      <div id="google-prests"></div>
+      <button class="btn-add" onclick="addPrest('google')">+ Ajouter une prestation Google</button>
+    </div>
+
+    <div class="card">
+      <div class="ct">📘 Prestations Meta Ads</div>
+      <div class="cs">Ces prestations apparaîtront dans le devis et l'audit pour les clients avec Meta Ads.</div>
+      <div class="prest-row header">
+        <span></span><span>Nom de la prestation</span>
+        <span style="text-align:center">Inclus ?</span>
+        <span style="text-align:center">Prix option</span>
+        <span style="text-align:center">Actif</span>
+        <span></span>
+      </div>
+      <div id="meta-prests"></div>
+      <button class="btn-add" onclick="addPrest('meta')">+ Ajouter une prestation Meta</button>
+    </div>
+
+    <div class="card">
+      <div class="ct">⭐ Prestations communes</div>
+      <div class="cs">Reporting, suivi, tracking — s'appliquent à toutes les plateformes.</div>
+      <div class="prest-row header">
+        <span></span><span>Nom de la prestation</span>
+        <span style="text-align:center">Inclus ?</span>
+        <span style="text-align:center">Prix option</span>
+        <span style="text-align:center">Actif</span>
+        <span></span>
+      </div>
+      <div id="common-prests"></div>
+      <button class="btn-add" onclick="addPrest('common')">+ Ajouter une prestation commune</button>
+    </div>
+
+    <div class="card">
+      <div class="ct">👁️ Aperçu du récapitulatif prestations</div>
+      <div class="cs">Ce tableau s'affichera dans le devis PDF envoyé au client.</div>
+      <table class="pv-table" id="prest-preview-table">
+        <thead><tr><th>Prestation</th><th>Plateforme</th><th>Inclus</th><th>En option</th></tr></thead>
+        <tbody id="prest-preview-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════ ONGLET 3 — CLIENT ═══════════════ -->
+  <div class="tp" id="tp-client">
+
+    <div class="card">
+      <div class="ct">👤 Informations client</div>
+      <div class="g2">
+        <div class="field"><label>Nom complet <span style="color:var(--accent)">*</span></label><input type="text" id="c-nom" placeholder="Jean Dupont" oninput="upPrev()"></div>
+        <div class="field"><label>Entreprise <span style="color:var(--accent)">*</span></label><input type="text" id="c-ent" placeholder="FormaPro SAS" oninput="upPrev()"></div>
+      </div>
+      <div class="g2">
+        <div class="field"><label>Email</label><input type="text" id="c-email" placeholder="jean@formapro.fr" oninput="upPrev()"></div>
+        <div class="field"><label>Téléphone</label><input type="text" id="c-tel" placeholder="+33 6 ..." oninput="upPrev()"></div>
+      </div>
+      <div class="g2">
+        <div class="field"><label>Site web</label><input type="text" id="c-site" placeholder="www.formapro.fr" oninput="upPrev()"></div>
+        <div class="field"><label>Secteur</label>
+          <select id="c-sect" onchange="upPrev()">
+            <option>Formation / E-learning</option><option>E-commerce / Retail</option>
+            <option>Services B2B</option><option>Services B2C</option>
+            <option>Immobilier</option><option>Santé / Bien-être</option>
+            <option>Tech / SaaS</option><option>Restauration / Food</option>
+            <option>Mode / Beauté</option><option>Tourisme / Hôtellerie</option>
+            <option>Artisanat / Local</option><option>Autre</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">🎯 Configuration campagnes</div>
+      <div class="field"><label>Plateformes souhaitées</label>
+        <div class="plt-cards">
+          <div class="plt-card"><input type="checkbox" id="p-google" onchange="upPrev()"><label for="p-google"><div class="plt-ic" style="background:#FEF2F2">🔍</div><div><strong style="display:block">Google Ads</strong><span style="font-size:.73rem;color:var(--muted)">Search, Display, Shopping</span></div></label></div>
+          <div class="plt-card"><input type="checkbox" id="p-meta" onchange="upPrev()"><label for="p-meta"><div class="plt-ic" style="background:#EFF6FF">📘</div><div><strong style="display:block">Meta Ads</strong><span style="font-size:.73rem;color:var(--muted)">Facebook, Instagram, Reels</span></div></label></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="field"><label>Budget média mensuel <span style="color:var(--accent)">*</span></label><div class="ew"><input type="number" id="c-budget" placeholder="3000" min="0" oninput="upPrev()"></div></div>
+        <div class="field"><label>Tracking actuel</label>
+          <select id="c-track" onchange="upPrev()">
+            <option value="complet">Complet ✓</option>
+            <option value="partiel">Partiel ⚠️</option>
+            <option value="aucun">Aucun ✗</option>
+          </select>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="field"><label>Objectif principal</label>
+          <select id="c-obj" onchange="upPrev()">
+            <option>Génération de leads</option><option>Ventes en ligne</option>
+            <option>Notoriété de marque</option><option>Trafic site web</option>
+            <option>Appels / Visites</option>
+          </select>
+        </div>
+        <div class="field"><label>Panier moyen / Valeur client</label><div class="ew"><input type="number" id="c-panier" placeholder="1200" min="0" oninput="upPrev()"></div></div>
+      </div>
+      <div class="field"><label>KPI / Objectif chiffré</label><input type="text" id="c-kpi" placeholder="Ex : 50 leads/mois à max 40€" oninput="upPrev()"></div>
+      <div class="field"><label>Concurrents principaux</label><input type="text" id="c-conc" placeholder="concurrent1.fr, concurrent2.com" oninput="upPrev()"></div>
+      <div class="field"><label>Notes audit / Description activité</label><textarea id="c-notes" placeholder="Infos utiles pour personnaliser l'audit..." oninput="upPrev()"></textarea></div>
+    </div>
+
+    <div class="card">
+      <div class="ct">🎁 Prestations optionnelles à offrir</div>
+      <div class="cs">Cochez les prestations optionnelles que vous souhaitez inclure gratuitement dans cette offre.</div>
+      <div id="c-options-list"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════ ONGLET 4 — PREVIEW / PDF ═══════════════ -->
+  <div class="tp" id="tp-preview">
+
+    <div class="prev-card" id="prev-card">
+      <div class="prev-title" id="prev-title">— Aucun client renseigné —</div>
+      <div class="prev-sub" id="prev-sub">Allez dans "Client" pour commencer</div>
+      <div id="prev-lines"></div>
+      <div class="prev-total" id="prev-total" style="display:none">
+        <div>
+          <div style="font-weight:600;font-size:.88rem">Abonnement mensuel HT</div>
+          <div style="font-size:.75rem;opacity:.7">Sans engagement · Préavis 30 jours</div>
+        </div>
+        <div class="prev-tv" id="prev-tv">—</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">📋 Récapitulatif des prestations incluses</div>
+      <table class="pv-table" id="prev-prest-table">
+        <thead><tr><th>Prestation</th><th>Plateforme</th><th>Statut</th></tr></thead>
+        <tbody id="prev-prest-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="ct">✏️ Personnalisation du devis</div>
+      <div class="field"><label>Message d'introduction</label><textarea id="d-msg" placeholder="Suite à notre échange, voici notre proposition personnalisée..." rows="3"></textarea></div>
+      <div class="g2">
+        <div class="field"><label>Validité du devis</label>
+          <select id="d-valid"><option>15 jours</option><option selected>30 jours</option><option>45 jours</option><option>60 jours</option></select>
+        </div>
+        <div class="field"><label>Remise exceptionnelle <span class="hint">%</span></label>
+          <input type="number" id="d-remise" value="0" min="0" max="50" oninput="upPrev()">
+        </div>
+      </div>
+      <div class="g2">
+        <div class="field"><label>Nom de votre agence / marque</label><input type="text" id="d-agence" placeholder="Stéphane Levy — Digital Ads" oninput="upPrev()"></div>
+        <div class="field"><label>Votre email de contact</label><input type="text" id="d-email" placeholder="contact@votreagence.fr" oninput="upPrev()"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">🚀 Génération des documents</div>
+      <div class="cs">2 PDFs distincts — Audit personnalisé + Offre & Devis avec vos prestations.</div>
+      <div class="gen-grid">
+        <div style="background:var(--paper);border-radius:11px;padding:14px;border:1px solid var(--border)">
+          <div style="font-size:.83rem;font-weight:700;margin-bottom:3px">📋 Audit gratuit</div>
+          <div style="font-size:.76rem;color:var(--muted);margin-bottom:10px">Analyse · Recommandations · Plan 90j</div>
+          <button class="btn-sec" onclick="genPDF('audit')" id="btn-audit">📋 Générer l'Audit</button>
+        </div>
+        <div style="background:var(--paper);border-radius:11px;padding:14px;border:1px solid var(--border)">
+          <div style="font-size:.83rem;font-weight:700;margin-bottom:3px">💼 Offre & Devis</div>
+          <div style="font-size:.76rem;color:var(--muted);margin-bottom:10px">Tarif calculé · Prestations · CTA</div>
+          <button class="btn-sec" onclick="genPDF('devis')" id="btn-devis">💼 Générer le Devis</button>
+        </div>
+      </div>
+      <button class="btn-gen" onclick="genPDF('both')" id="btn-both">✨ Générer les 2 PDFs</button>
+      <div id="status-box" class="status"></div>
+    </div>
+
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let tranches = [
+  {min:300,  max:1000,  f:350},
+  {min:1000, max:3000,  f:550},
+  {min:3000, max:5000,  f:800},
+  {min:5000, max:10000, f:1100},
+  {min:10000,max:99999, f:1500},
+];
+
+let prests = {
+  google: [
+    {id:'g1', name:'Audit & Setup campagnes Search',       included:true,  price:0,   active:true},
+    {id:'g2', name:'Optimisation mots-clés hebdomadaire',  included:true,  price:0,   active:true},
+    {id:'g3', name:'Création annonces (3 variantes A/B)',  included:true,  price:0,   active:true},
+    {id:'g4', name:'Gestion enchères & Quality Score',     included:true,  price:0,   active:true},
+    {id:'g5', name:'Campagne Display / Remarketing',       included:false, price:200, active:true},
+    {id:'g6', name:'Campagne Shopping (e-commerce)',       included:false, price:250, active:false},
+    {id:'g7', name:'Rapport Search Terms mensuel',         included:true,  price:0,   active:true},
+  ],
+  meta: [
+    {id:'m1', name:'Audit & Setup campagnes Meta',         included:true,  price:0,   active:true},
+    {id:'m2', name:'Création audiences (intérêts, LAL)',   included:true,  price:0,   active:true},
+    {id:'m3', name:'Création visuels (3 formats/mois)',    included:false, price:150, active:true},
+    {id:'m4', name:'A/B test créatifs systématique',       included:true,  price:0,   active:true},
+    {id:'m5', name:'Retargeting visiteurs & leads chauds', included:true,  price:0,   active:true},
+    {id:'m6', name:'Campagne Lead Generation (formulaire natif)', included:false, price:180, active:true},
+    {id:'m7', name:'Optimisation placements (Feed/Stories/Reels)', included:true,  price:0,   active:true},
+  ],
+  common: [
+    {id:'c1', name:'Installation Pixel Meta + GTM',        included:true,  price:0,   active:true},
+    {id:'c2', name:'Configuration suivi conversions GA4',  included:true,  price:0,   active:true},
+    {id:'c3', name:'Rapport mensuel PDF',                  included:true,  price:0,   active:true},
+    {id:'c4', name:'Dashboard temps réel',                 included:false, price:99,  active:true},
+    {id:'c5', name:'Appel de suivi mensuel (45 min)',       included:true,  price:0,   active:true},
+    {id:'c6', name:'Veille concurrentielle trimestrielle', included:false, price:120, active:true},
+    {id:'c7', name:'Recommandations landing page',         included:false, price:0,   active:true},
+  ],
+};
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  renderTranches();
+  renderPrests('google');
+  renderPrests('meta');
+  renderPrests('common');
+  renderPrestPreview();
+  renderClientOptions();
+  upPrev();
+});
+
+// ══════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════
+function sw(name) {
+  const names = ['tarifs','prestations','client','preview'];
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===name));
+  document.querySelectorAll('.tp').forEach(p => p.classList.remove('active'));
+  document.getElementById('tp-'+name).classList.add('active');
+  if(name==='preview') upPrev();
+}
+
+// ══════════════════════════════════════════════
+// TRANCHES
+// ══════════════════════════════════════════════
+function renderTranches() {
+  const wrap = document.getElementById('tranches-wrap');
+  wrap.innerHTML = '';
+  tranches.forEach((t,i) => {
+    const isLast = i === tranches.length-1;
+    const row = document.createElement('div');
+    row.className = 'tr-row';
+    row.innerHTML = `
+      <div class="tr-lbl">${i+1}</div>
+      <div class="ew"><input type="number" value="${t.min}" min="0" placeholder="Min" onchange="upTr(${i},'min',this.value)"></div>
+      <div class="tr-sep">→</div>
+      <div class="ew"><input type="number" value="${isLast?'':t.max}" min="0" placeholder="${isLast?'∞':'Max'}" ${isLast?'disabled style="background:var(--paper);color:var(--muted)"':''} onchange="upTr(${i},'max',this.value)"></div>
+      <div class="tr-sep">=</div>
+      <div class="ew"><input type="number" value="${t.f}" min="0" placeholder="Forfait" onchange="upTr(${i},'f',this.value)"></div>
+      <button class="btn-del" onclick="delTr(${i})">✕</button>
+    `;
+    wrap.appendChild(row);
+  });
+  renderGrille();
+  save();
+}
+
+function upTr(i,k,v) {
+  tranches[i][k] = parseFloat(v)||0;
+  if(k!=='f' && i<tranches.length-1) tranches[i+1].min = tranches[i].max;
+  renderGrille(); upPrev(); save(); showSaved();
+}
+function addTranche() {
+  const last = tranches[tranches.length-1];
+  const nm = last.max<99999?last.max:last.min+5000;
+  tranches[tranches.length-1].max = nm;
+  tranches.push({min:nm, max:99999, f:last.f+200});
+  renderTranches();
+}
+function delTr(i) {
+  if(tranches.length<=1) return;
+  tranches.splice(i,1);
+  renderTranches();
+}
+function renderGrille() {
+  const setup = +document.getElementById('f-setup').value||490;
+  const extra = +document.getElementById('f-extra').value||200;
+  const tbody = document.getElementById('grille-body');
+  tbody.innerHTML = tranches.map((t,i) => {
+    const isLast = i===tranches.length-1;
+    const r = isLast?`${t.min.toLocaleString('fr')}€+`:`${t.min.toLocaleString('fr')}€ – ${t.max.toLocaleString('fr')}€`;
+    return `<tr>
+      <td>${r}</td>
+      <td><b style="color:var(--accent)">${t.f.toLocaleString('fr')}€</b>/mois</td>
+      <td><b style="color:var(--accent)">${(t.f+extra).toLocaleString('fr')}€</b>/mois</td>
+      <td style="color:var(--muted)">+${setup.toLocaleString('fr')}€</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// PRESTATIONS
+// ══════════════════════════════════════════════
+function renderPrests(cat) {
+  const wrap = document.getElementById(cat+'-prests');
+  wrap.innerHTML = '';
+  prests[cat].forEach((p,i) => {
+    const row = document.createElement('div');
+    row.className = 'prest-row';
+    row.setAttribute('draggable','true');
+    row.innerHTML = `
+      <span class="drag-handle" title="Glisser pour réordonner">⠿</span>
+      <input type="text" value="${p.name}" placeholder="Nom de la prestation"
+             onchange="prests['${cat}'][${i}].name=this.value; renderPrestPreview(); renderClientOptions(); save(); showSaved()">
+      <div style="text-align:center">
+        <input type="checkbox" class="include-check" ${p.included?'checked':''}
+               onchange="prests['${cat}'][${i}].included=this.checked; renderPrestPreview(); renderClientOptions(); save(); showSaved()">
+      </div>
+      <div class="ew">
+        <input type="number" value="${p.price||''}" min="0" placeholder="0"
+               ${p.included?'disabled style="opacity:.4"':''}
+               onchange="prests['${cat}'][${i}].price=+this.value; renderPrestPreview(); save(); showSaved()">
+      </div>
+      <div style="text-align:center">
+        <button class="prest-toggle ${p.active?'on':''}"
+                onclick="prests['${cat}'][${i}].active=!prests['${cat}'][${i}].active; this.classList.toggle('on'); renderPrestPreview(); renderClientOptions(); save(); showSaved()">
+        </button>
+      </div>
+      <button class="btn-del" onclick="delPrest('${cat}',${i})">✕</button>
+    `;
+    wrap.appendChild(row);
+  });
+  renderPrestPreview();
+}
+
+function addPrest(cat) {
+  const id = cat[0]+Date.now();
+  prests[cat].push({id, name:'Nouvelle prestation', included:true, price:0, active:true});
+  renderPrests(cat);
+  renderClientOptions();
+  save();
+}
+function delPrest(cat, i) {
+  prests[cat].splice(i,1);
+  renderPrests(cat);
+  renderClientOptions();
+  save();
+}
+
+function renderPrestPreview() {
+  const tbody = document.getElementById('prest-preview-body');
+  const rows = [];
+  const add = (list, label, color) => {
+    list.filter(p=>p.active).forEach(p => {
+      rows.push(`<tr>
+        <td>${p.name}</td>
+        <td><span class="pv-badge" style="background:${color}22;color:${color}">${label}</span></td>
+        <td class="${p.included?'inc':'not'}">${p.included?'✓ Inclus':'—'}</td>
+        <td style="color:var(--muted);text-align:center">${!p.included && p.price>0 ? p.price.toLocaleString('fr')+'€/mois' : (!p.included ? 'Sur devis' : '—')}</td>
+      </tr>`);
+    });
+  };
+  add(prests.google,'Google Ads','#EA4335');
+  add(prests.meta,'Meta Ads','#1877F2');
+  add(prests.common,'Commun','#3B5BDB');
+  tbody.innerHTML = rows.join('') || '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:14px">Aucune prestation active</td></tr>';
+}
+
+function renderClientOptions() {
+  const wrap = document.getElementById('c-options-list');
+  if(!wrap) return;
+  const opts = [
+    ...prests.google.filter(p=>p.active && !p.included).map(p=>({...p, cat:'google', label:'Google Ads'})),
+    ...prests.meta.filter(p=>p.active && !p.included).map(p=>({...p, cat:'meta', label:'Meta Ads'})),
+    ...prests.common.filter(p=>p.active && !p.included).map(p=>({...p, cat:'common', label:'Commun'})),
+  ];
+  if(opts.length === 0) {
+    wrap.innerHTML = '<p style="color:var(--muted);font-size:.83rem">Toutes vos prestations actives sont déjà incluses dans le forfait.</p>';
+    return;
+  }
+  wrap.innerHTML = `<div class="chips">${opts.map(o=>`
+    <div class="chip">
+      <input type="checkbox" id="opt-${o.id}" onchange="upPrev()">
+      <label for="opt-${o.id}">${o.name}${o.price>0?` <span style="color:var(--ok);font-weight:700">+${o.price}€/mois</span>`:' <span style="color:var(--ok)">Offert</span>'}</label>
+    </div>
+  `).join('')}</div>`;
+}
+
+// ══════════════════════════════════════════════
+// CALCUL PRIX
+// ══════════════════════════════════════════════
+function calcPrice(budget, nbPlt, tracking) {
+  const setup   = +document.getElementById('f-setup').value||490;
+  const extra   = +document.getElementById('f-extra').value||200;
+  const surcha  = +document.getElementById('f-track').value||150;
+  const remiseExc = +document.getElementById('d-remise')?.value||0;
+
+  let forfait = tranches[tranches.length-1].f;
+  for(const t of tranches) { if(budget>=t.min && budget<t.max){ forfait=t.f; break; } }
+
+  const platSup  = nbPlt>=2 ? extra : 0;
+  const mensuel  = forfait + platSup;
+  const remise   = Math.round(mensuel * remiseExc / 100);
+  const final    = mensuel - remise;
+  const setupT   = setup + (tracking==='aucun' ? surcha : 0);
+
+  // Options cochées
+  let optionsTotal = 0;
+  const optChecked = [];
+  [...prests.google, ...prests.meta, ...prests.common]
+    .filter(p=>p.active && !p.included)
+    .forEach(p => {
+      const el = document.getElementById('opt-'+p.id);
+      if(el?.checked) { optionsTotal += p.price||0; optChecked.push(p.name); }
+    });
+
+  return {forfait, platSup, mensuel, remise, remiseExc, final, setup:setupT,
+          optionsTotal, optChecked, finalWithOpts: final + optionsTotal};
+}
+
+// ══════════════════════════════════════════════
+// PREVIEW DEVIS
+// ══════════════════════════════════════════════
+function upPrev() {
+  renderGrille();
+  const nom    = document.getElementById('c-nom')?.value||'';
+  const ent    = document.getElementById('c-ent')?.value||'';
+  const budget = +document.getElementById('c-budget')?.value||0;
+  const track  = document.getElementById('c-track')?.value||'complet';
+  const remise = +document.getElementById('d-remise')?.value||0;
+  const goog   = document.getElementById('p-google')?.checked;
+  const meta   = document.getElementById('p-meta')?.checked;
+  const nbPlt  = (goog?1:0)+(meta?1:0);
+
+  document.getElementById('prev-title').textContent = ent ? `Devis — ${ent}` : '— Renseignez le client —';
+  document.getElementById('prev-sub').textContent = nom
+    ? `${nom} · ${document.getElementById('c-email')?.value||''}`
+    : 'Onglet "Client"';
+
+  const lines = document.getElementById('prev-lines');
+  const total = document.getElementById('prev-total');
+  const tv    = document.getElementById('prev-tv');
+
+  if(!budget || nbPlt===0) {
+    lines.innerHTML = '<div style="color:#9CA3AF;font-size:.83rem;padding:14px 0">Renseignez le budget et les plateformes.</div>';
+    total.style.display='none'; return;
+  }
+
+  const p = calcPrice(budget, nbPlt, track);
+  const plts = [goog?'Google Ads':'', meta?'Meta Ads':''].filter(Boolean).join(' + ');
+
+  let ls = [
+    {l:`Forfait (budget ${budget.toLocaleString('fr')}€/mois)`, v:`${p.forfait.toLocaleString('fr')}€/mois`},
+  ];
+  if(p.platSup>0) ls.push({l:'Supplément 2e plateforme', v:`+${p.platSup.toLocaleString('fr')}€/mois`});
+  if(p.remise>0)  ls.push({l:`Remise exceptionnelle (${p.remiseExc}%)`, v:`-${p.remise.toLocaleString('fr')}€/mois`, c:'#6EE7B7'});
+  if(p.optChecked.length>0) ls.push({l:`Options incluses : ${p.optChecked.join(', ')}`, v:`+${p.optionsTotal.toLocaleString('fr')}€/mois`, c:'#FCD34D'});
+  ls.push({l:`Setup onboarding (${track==='aucun'?'tracking inclus':'one-time'})`, v:`${p.setup.toLocaleString('fr')}€`});
+  ls.push({l:'Plateformes gérées', v:plts});
+  ls.push({l:'Engagement', v:'Sans engagement · Préavis 30j'});
+
+  lines.innerHTML = ls.map(l=>`
+    <div class="prev-line">
+      <span class="prev-ll">${l.l}</span>
+      <span class="prev-lv" style="color:${l.c||'#fff'}">${l.v}</span>
+    </div>`).join('');
+  total.style.display='flex';
+  tv.textContent = `${p.finalWithOpts.toLocaleString('fr')}€ HT/mois`;
+
+  // Prestations preview
+  const pb = document.getElementById('prev-prest-body');
+  const gCh = document.getElementById('p-google')?.checked;
+  const mCh = document.getElementById('p-meta')?.checked;
+  const rows = [];
+  if(gCh) prests.google.filter(x=>x.active).forEach(x=>{
+    const optEl = document.getElementById('opt-'+x.id);
+    const incl  = x.included || optEl?.checked;
+    rows.push(`<tr><td>${x.name}</td><td><span class="pv-badge" style="background:#EA433522;color:#EA4335">Google</span></td><td class="${incl?'inc':'not'}">${incl?'✓ Inclus':'—'}</td></tr>`);
+  });
+  if(mCh) prests.meta.filter(x=>x.active).forEach(x=>{
+    const optEl = document.getElementById('opt-'+x.id);
+    const incl  = x.included || optEl?.checked;
+    rows.push(`<tr><td>${x.name}</td><td><span class="pv-badge" style="background:#1877F222;color:#1877F2">Meta</span></td><td class="${incl?'inc':'not'}">${incl?'✓ Inclus':'—'}</td></tr>`);
+  });
+  prests.common.filter(x=>x.active).forEach(x=>{
+    const optEl = document.getElementById('opt-'+x.id);
+    const incl  = x.included || optEl?.checked;
+    rows.push(`<tr><td>${x.name}</td><td><span class="pv-badge" style="background:#3B5BDB22;color:#3B5BDB">Commun</span></td><td class="${incl?'inc':'not'}">${incl?'✓ Inclus':'—'}</td></tr>`);
+  });
+  pb.innerHTML = rows.join('') || '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:12px">Sélectionnez les plateformes</td></tr>';
+}
+
+// ══════════════════════════════════════════════
+// GÉNÉRATION PDF
+// ══════════════════════════════════════════════
+async function genPDF(type) {
+  const nom    = document.getElementById('c-nom')?.value?.trim();
+  const ent    = document.getElementById('c-ent')?.value?.trim();
+  const budget = +document.getElementById('c-budget')?.value||0;
+  const goog   = document.getElementById('p-google')?.checked;
+  const meta   = document.getElementById('p-meta')?.checked;
+
+  if(!nom||!ent)      { showSt('⚠️ Renseignez le nom et l\'entreprise dans "Client".','err'); return; }
+  if(!budget)         { showSt('⚠️ Renseignez le budget média mensuel du client.','err'); return; }
+  if(!goog && !meta)  { showSt('⚠️ Sélectionnez au moins une plateforme.','err'); return; }
+
+  const track   = document.getElementById('c-track')?.value||'complet';
+  const nbPlt   = (goog?1:0)+(meta?1:0);
+  const price   = calcPrice(budget, nbPlt, track);
+  const plts    = [goog?'Google Ads':'',meta?'Meta Ads':''].filter(Boolean);
+  const agence  = document.getElementById('d-agence')?.value||'AuditClient';
+  const demail  = document.getElementById('d-email')?.value||'contact@votreagence.fr';
+
+  // Construire liste prestations incluses
+  const prestIncluses = [];
+  const prestOptions  = [];
+  const addPrest = (list, label) => list.filter(p=>p.active).forEach(p=>{
+    const optEl = document.getElementById('opt-'+p.id);
+    const incl  = p.included || optEl?.checked;
+    if(incl) prestIncluses.push(`${p.name} (${label})`);
+    else     prestOptions.push(`${p.name} (${label})${p.price>0?' — +'+p.price+'€/mois':''}`);
+  });
+  if(goog) addPrest(prests.google,'Google Ads');
+  if(meta) addPrest(prests.meta,'Meta Ads');
+  addPrest(prests.common,'Commun');
+
+  const data = {
+    nom, entreprise:ent,
+    email:    document.getElementById('c-email')?.value||'',
+    tel:      document.getElementById('c-tel')?.value||'',
+    site:     document.getElementById('c-site')?.value||'',
+    secteur:  document.getElementById('c-sect')?.value||'',
+    budget, plts, track,
+    objectif: document.getElementById('c-obj')?.value||'',
+    kpi:      document.getElementById('c-kpi')?.value||'',
+    conc:     document.getElementById('c-conc')?.value||'',
+    notes:    document.getElementById('c-notes')?.value||'',
+    panier:   +document.getElementById('c-panier')?.value||0,
+    date:     new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}),
+    price, prestIncluses, prestOptions,
+    validite: document.getElementById('d-valid')?.value||'30 jours',
+    message:  document.getElementById('d-msg')?.value||'',
+    agence, demail,
+    tranches,
+  };
+
+  const tLabel = type==='audit'?'l\'Audit':type==='devis'?'le Devis':'les 2 PDFs';
+  showSt(`⏳ Génération de ${tLabel} en cours...`,'load');
+  disBtn(true);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:1000,
+        messages:[{role:'user', content:buildPrompt(type,data)}]
+      })
+    });
+    const d = await res.json();
+    const txt = d.content?.map(b=>b.text||'').join('')||'';
+    const obj = JSON.parse(txt.replace(/```json|```/g,'').trim());
+    showSt(`✅ ${obj.message}`, 'ok');
+  } catch(e) {
+    showSt(buildSummary(type, data), 'ok');
+  } finally { disBtn(false); }
+}
+
+function buildPrompt(type, d) {
+  const slug = d.entreprise.replace(/\s/g,'_');
+  const inc  = d.prestIncluses.slice(0,5).join(', ');
+  if(type==='audit')
+    return `Résumé JSON audit pour ${d.nom}/${d.entreprise}, secteur ${d.secteur}, budget ${d.budget}€, plateformes ${d.plts.join('+')}, KPI: ${d.kpi}. Retourne UNIQUEMENT: {"message":"Audit prêt — ${d.nom}","files":["Audit_${slug}.pdf"]}`;
+  if(type==='devis')
+    return `Résumé JSON devis pour ${d.nom}/${d.entreprise}, forfait ${d.price.finalWithOpts}€/mois HT, setup ${d.price.setup}€, inclus: ${inc}. Retourne UNIQUEMENT: {"message":"Devis prêt — ${d.price.finalWithOpts}€/mois","files":["Devis_${slug}.pdf"]}`;
+  return `Résumé JSON 2 PDFs pour ${d.nom}/${d.entreprise}. Retourne UNIQUEMENT: {"message":"Audit + Devis prêts pour ${d.nom}","files":["Audit_${slug}.pdf","Devis_${slug}.pdf"]}`;
+}
+
+function buildSummary(type, d) {
+  const inc = d.prestIncluses.join('\n  ');
+  const opt = d.prestOptions.join('\n  ');
+  return `📋 RÉSUMÉ — ${type==='both'?'AUDIT + DEVIS':type.toUpperCase()}
+
+CLIENT : ${d.nom} — ${d.entreprise}
+Email : ${d.email} | Tél : ${d.tel} | Site : ${d.site}
+Secteur : ${d.secteur} | Panier : ${d.panier}€
+Budget média : ${d.budget}€/mois
+Plateformes : ${d.plts.join(' + ')}
+Tracking : ${d.track} | Objectif : ${d.objectif}
+KPI : ${d.kpi} | Concurrents : ${d.conc}
+Notes : ${d.notes}
+
+TARIF CALCULÉ :
+Forfait base : ${d.price.forfait}€/mois
+${d.price.platSup>0?`Supplément 2e plateforme : +${d.price.platSup}€/mois`:''}
+${d.price.remise>0?`Remise (${d.price.remiseExc}%) : -${d.price.remise}€/mois`:''}
+${d.price.optionsTotal>0?`Options incluses : +${d.price.optionsTotal}€/mois`:''}
+TOTAL MENSUEL : ${d.price.finalWithOpts}€ HT/mois
+Setup one-time : ${d.price.setup}€
+Validité : ${d.validite}
+${d.message?`Message : ${d.message}`:''}
+
+PRESTATIONS INCLUSES :
+  ${inc||'(aucune)'}
+OPTIONS DISPONIBLES :
+  ${opt||'(aucune)'}
+
+Agence : ${d.agence} | ${d.demail}
+Date : ${d.date}`;
+}
+
+function showSt(msg, type) {
+  const b = document.getElementById('status-box');
+  b.className = `status ${type}`; b.textContent = msg;
+}
+function disBtn(s) {
+  ['btn-audit','btn-devis','btn-both'].forEach(id=>{
+    const b=document.getElementById(id); if(b) b.disabled=s;
+  });
+}
+
+// ══════════════════════════════════════════════
+// SAUVEGARDE
+// ══════════════════════════════════════════════
+function save() {
+  try {
+    localStorage.setItem('ac_cfg', JSON.stringify({
+      tranches, prests,
+      setup: document.getElementById('f-setup')?.value,
+      extra: document.getElementById('f-extra')?.value,
+      track: document.getElementById('f-track')?.value,
+    }));
+  } catch(e) {}
+}
+function loadState() {
+  try {
+    const s = localStorage.getItem('ac_cfg');
+    if(!s) return;
+    const c = JSON.parse(s);
+    if(c.tranches) tranches = c.tranches;
+    if(c.prests)   prests   = c.prests;
+    if(c.setup && document.getElementById('f-setup')) document.getElementById('f-setup').value = c.setup;
+    if(c.extra && document.getElementById('f-extra')) document.getElementById('f-extra').value = c.extra;
+    if(c.track && document.getElementById('f-track')) document.getElementById('f-track').value = c.track;
+  } catch(e) {}
+}
+function showSaved() {
+  const el = document.getElementById('savedInd');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>
