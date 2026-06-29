@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Audit Gratuit — Google Ads & Meta Ads</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -332,10 +333,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 </div><!-- /form-wrap -->
 
 <script>
-const _t1 = 'ntn_6745588187';
-const _t2 = '64hTAyB5KRmLKk9WY4hBCEjBatAWO4EIq0gj';
-const NOTION_TOKEN = _t1 + _t2;
-const NOTION_DB    = '38efb4af129480d2b041d1ae61905a33';
+// EmailJS Config
+const EJS_SERVICE  = 'service_oqqdrxb';
+const EJS_TEMPLATE = 'template_v3emg05';
+const EJS_KEY      = 'vKZK6nffSRqMz3LEH';
+emailjs.init(EJS_KEY);
 
 const BUDGETS = [300,500,1000,1500,3000,5000,8000,10000,15000,20000,35000,50000,99999];
 const BLABELS = ['300€','500€','1 000€','1 500€','3 000€','5 000€','8 000€','10 000€','15 000€','20 000€','35 000€','50 000€','50 000€+'];
@@ -497,23 +499,38 @@ function collectData() {
 
 async function sendToNotion(d) {
   const pltMap = {google:'Google Ads', meta:'Meta Ads', both:'Google + Meta'};
-  const ps = d.pagespeed;
-  const bm = d.benchmarks || {};
+  const ps  = d.pagespeed || {};
+  const bm  = d.benchmarks || {};
+  const plt = pltMap[d.plt] || d.plt || '';
 
-  // Notes sans caractères spéciaux pour compatibilité
-  let notes = '';
-  if(ps) {
-    notes += `=== ANALYSE SITE ===\n`;
-    notes += `Score Performance Mobile : ${ps.perf}/100\n`;
-    notes += `Score SEO : ${ps.seo}/100\n`;
-    notes += `Score Accessibilite : ${ps.accessibility}/100\n`;
-    notes += `FCP : ${ps.fcp} | LCP : ${ps.lcp} | CLS : ${ps.cls}\n`;
-    notes += `HTTPS : ${ps.https ? 'Oui' : 'Non'}\n`;
-    notes += `Mobile : ${ps.mobile ? 'Compatible' : 'Problemes'}\n`;
-    if(ps.opportunities?.length > 0) {
-      notes += `\nAmeliorations prioritaires :\n`;
-      ps.opportunities.forEach(o => notes += `- ${o}\n`);
-    }
+  let analyse = ps.perf
+    ? 'Score Perf Mobile: ' + ps.perf + '/100 | SEO: ' + (ps.seo||'-') + '/100 | FCP: ' + (ps.fcp||'-') + ' | LCP: ' + (ps.lcp||'-') + ' | HTTPS: ' + (ps.https?'Oui':'Non') + ' | Mobile: ' + (ps.mobile?'OK':'Problemes') + (ps.opportunities&&ps.opportunities.length?' | Améliorations: '+ps.opportunities.slice(0,3).join(', '):'')
+    : 'Non disponible';
+
+  let benchmarks = bm.cpa
+    ? 'CPA: '+bm.cpa+' | ROAS: '+(bm.roas||'-')+' | CPC Google: '+(bm.cpc_g||'-')+' | CPC Meta: '+(bm.cpc_m||'-')
+    : 'Non disponible';
+
+  const params = {
+    to_email:        'levy.stephane.pro@gmail.com',
+    client_nom:      d.nom || '',
+    client_email:    d.email || '',
+    client_site:     d.url || '',
+    client_ent:      d.ent || '',
+    client_secteur:  d.sect || '',
+    client_plt:      plt,
+    client_budget:   d.budget || '',
+    client_objectif: d.objectif || '',
+    analyse_site:    analyse,
+    benchmarks:      benchmarks,
+    date:            new Date().toLocaleDateString('fr-FR'),
+  };
+
+  try {
+    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, params);
+    console.log('Email envoye !');
+  } catch(e) { console.log('EmailJS error:', e); }
+}
   }
   notes += `\n=== BENCHMARKS SECTORIELS ===\n`;
   notes += `CPA moyen secteur : ${bm.cpa || ''}\n`;
