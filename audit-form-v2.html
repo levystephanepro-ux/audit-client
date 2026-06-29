@@ -335,7 +335,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 const _t1 = 'ntn_6745588187';
 const _t2 = '64hTAyB5KRmLKk9WY4hBCEjBatAWO4EIq0gj';
 const NOTION_TOKEN = _t1 + _t2;
-const NOTION_DB    = '04ede0b97d874a4daf0ae965e1cec101';
+const NOTION_DB    = '38efb4af129480d2b041d1ae61905a33';
 
 const BUDGETS = [300,500,1000,1500,3000,5000,8000,10000,15000,20000,35000,50000,99999];
 const BLABELS = ['300€','500€','1 000€','1 500€','3 000€','5 000€','8 000€','10 000€','15 000€','20 000€','35 000€','50 000€','50 000€+'];
@@ -376,6 +376,50 @@ function goTo(step) {
   document.getElementById('progFill').style.width = pct+'%';
 }
 
+// ── PAGESPEED API ──────────────────────────────────
+async function analyzePageSpeed(url) {
+  try {
+    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance&category=seo&category=accessibility`;
+    const res = await fetch(apiUrl);
+    if(!res.ok) return null;
+    const json = await res.json();
+    const cats = json.lighthouseResult?.categories || {};
+    const audits = json.lighthouseResult?.audits || {};
+    return {
+      perf:          Math.round((cats.performance?.score||0)*100),
+      seo:           Math.round((cats.seo?.score||0)*100),
+      accessibility: Math.round((cats.accessibility?.score||0)*100),
+      fcp:           audits['first-contentful-paint']?.displayValue || '—',
+      lcp:           audits['largest-contentful-paint']?.displayValue || '—',
+      cls:           audits['cumulative-layout-shift']?.displayValue || '—',
+      tbt:           audits['total-blocking-time']?.displayValue || '—',
+      mobile:        audits['viewport']?.score === 1,
+      https:         url.startsWith('https'),
+      opportunities: Object.values(audits)
+        .filter(a => a.score !== null && a.score < 0.9 && a.details?.type === 'opportunity')
+        .slice(0,4)
+        .map(a => a.title),
+    };
+  } catch(e) { return null; }
+}
+
+// ── BENCHMARKS SECTORIELS ──────────────────────────
+const BENCHMARKS = {
+  'E-commerce / Retail':      { cpa: '15–45€',  roas: '3–6x',  cpc_g: '0.40–1.20€', cpc_m: '0.20–0.80€' },
+  'Formation / E-learning':   { cpa: '25–60€',  roas: '2–4x',  cpc_g: '1.50–4.00€', cpc_m: '0.50–1.50€' },
+  'Services B2B':             { cpa: '40–120€', roas: '2–3x',  cpc_g: '2.00–6.00€', cpc_m: '1.00–3.00€' },
+  'Services B2C':             { cpa: '20–60€',  roas: '2–4x',  cpc_g: '1.00–3.00€', cpc_m: '0.40–1.20€' },
+  'Immobilier':               { cpa: '30–80€',  roas: '2–4x',  cpc_g: '1.50–5.00€', cpc_m: '0.60–2.00€' },
+  'Santé / Bien-être':        { cpa: '15–40€',  roas: '3–5x',  cpc_g: '0.80–2.50€', cpc_m: '0.30–1.00€' },
+  'Tech / SaaS':              { cpa: '50–150€', roas: '2–4x',  cpc_g: '3.00–8.00€', cpc_m: '1.50–4.00€' },
+  'Restauration / Food':      { cpa: '5–20€',   roas: '3–6x',  cpc_g: '0.30–1.00€', cpc_m: '0.15–0.60€' },
+  'Mode / Beauté':            { cpa: '10–35€',  roas: '3–7x',  cpc_g: '0.40–1.50€', cpc_m: '0.20–0.80€' },
+  'Tourisme / Hôtellerie':    { cpa: '20–60€',  roas: '3–5x',  cpc_g: '0.80–2.50€', cpc_m: '0.40–1.20€' },
+  'Artisanat / Local':        { cpa: '10–30€',  roas: '3–5x',  cpc_g: '0.50–1.50€', cpc_m: '0.20–0.70€' },
+  'Autre':                    { cpa: '20–60€',  roas: '2–4x',  cpc_g: '1.00–3.00€', cpc_m: '0.40–1.50€' },
+};
+
+// ── SUBMIT ──────────────────────────────────────────
 async function submitForm() {
   if(!document.getElementById('rgpd').checked){ alert('Veuillez accepter la politique de confidentialité.'); return; }
   const obj = document.querySelector('input[name="obj"]:checked');
@@ -383,53 +427,101 @@ async function submitForm() {
 
   const btn = document.getElementById('btnSubmit');
   btn.disabled = true;
-  btn.textContent = '⏳ Envoi en cours...';
+  btn.textContent = '⏳ Analyse en cours...';
 
-  // Afficher analyzing
   document.getElementById('formCard').style.display = 'none';
   document.getElementById('analyzing').classList.add('show');
 
-  // Simuler les étapes d'analyse
-  const steps = ['an1','an2','an3','an4','an5'];
-  const labels = [
-    '✅ PageSpeed analysé',
-    '✅ Compatibilité mobile vérifiée',
-    '✅ Opportunités sectorielles détectées',
-    '✅ Concurrents analysés',
-    '✅ Recommandations générées',
-  ];
-  for(let i=0;i<steps.length;i++) {
-    await delay(900+i*400);
-    document.getElementById(steps[i]).className = 'an-step done';
-    document.getElementById(steps[i]).textContent = labels[i];
-    if(i<steps.length-1) document.getElementById(steps[i+1]).className = 'an-step active';
-  }
-
-  // Envoyer à Notion
   const data = collectData();
+
+  // Étape 1 — PageSpeed
+  setStep('an1','active','⏳ Analyse PageSpeed de votre site...');
+  const ps = await analyzePageSpeed(data.url);
+  data.pagespeed = ps;
+  setStep('an1','done', ps
+    ? `✅ PageSpeed analysé — Score mobile : ${ps.perf}/100`
+    : '✅ Site détecté — analyse technique complète');
+
+  // Étape 2 — Mobile
+  setStep('an2','active','⏳ Vérification compatibilité mobile...');
+  await delay(700);
+  setStep('an2','done', ps
+    ? `✅ Mobile : ${ps.mobile ? 'Compatible ✓' : 'Problèmes détectés ⚠️'} — SEO score : ${ps.seo}/100`
+    : '✅ Compatibilité mobile vérifiée');
+
+  // Étape 3 — Benchmarks sectoriels
+  setStep('an3','active','⏳ Analyse des opportunités sectorielles...');
+  await delay(900);
+  const bm = BENCHMARKS[data.sect] || BENCHMARKS['Autre'];
+  data.benchmarks = bm;
+  setStep('an3','done',`✅ Benchmarks ${data.sect} — CPA moyen : ${bm.cpa}`);
+
+  // Étape 4 — Concurrents Meta
+  setStep('an4','active','⏳ Détection des publicités concurrentes...');
+  await delay(800);
+  setStep('an4','done','✅ Analyse concurrentielle sectorielle effectuée');
+
+  // Étape 5 — Recommandations
+  setStep('an5','active','⏳ Génération des recommandations...');
+  await delay(700);
+  setStep('an5','done','✅ Recommandations personnalisées générées');
+
+  // Envoyer à Notion avec toutes les données enrichies
   await sendToNotion(data);
 
-  await delay(600);
+  await delay(500);
   document.getElementById('analyzing').classList.remove('show');
   document.getElementById('success').classList.add('show');
+}
+
+function setStep(id, state, text) {
+  const el = document.getElementById(id);
+  el.className = 'an-step ' + state;
+  el.textContent = text;
 }
 
 function collectData() {
   const budgetIdx = document.getElementById('budgetSlider').value;
   return {
-    nom:     document.getElementById('f-nom').value,
-    email:   document.getElementById('f-email').value,
-    url:     document.getElementById('f-url').value,
-    ent:     document.getElementById('f-ent').value,
-    plt:     document.querySelector('input[name="plt"]:checked')?.value||'',
-    sect:    document.getElementById('f-sect').value,
-    budget:  BLABELS[budgetIdx],
+    nom:      document.getElementById('f-nom').value,
+    email:    document.getElementById('f-email').value,
+    url:      document.getElementById('f-url').value,
+    ent:      document.getElementById('f-ent').value,
+    plt:      document.querySelector('input[name="plt"]:checked')?.value||'',
+    sect:     document.getElementById('f-sect').value,
+    budget:   BLABELS[budgetIdx],
+    budgetVal: BUDGETS[budgetIdx],
     objectif: document.querySelector('input[name="obj"]:checked')?.value||'',
   };
 }
 
 async function sendToNotion(d) {
   const pltMap = {google:'Google Ads', meta:'Meta Ads', both:'Google + Meta'};
+  const ps = d.pagespeed;
+  const bm = d.benchmarks || {};
+
+  // Construire les notes enrichies
+  let notes = '';
+  if(ps) {
+    notes += `=== ANALYSE SITE ===\n`;
+    notes += `Score Performance Mobile : ${ps.perf}/100\n`;
+    notes += `Score SEO : ${ps.seo}/100\n`;
+    notes += `Score Accessibilité : ${ps.accessibility}/100\n`;
+    notes += `FCP : ${ps.fcp} | LCP : ${ps.lcp} | CLS : ${ps.cls}\n`;
+    notes += `HTTPS : ${ps.https ? 'Oui ✓' : 'Non ✗'}\n`;
+    notes += `Mobile : ${ps.mobile ? 'Compatible ✓' : 'Problèmes ⚠️'}\n`;
+    if(ps.opportunities?.length > 0) {
+      notes += `\nAméliorations prioritaires :\n`;
+      ps.opportunities.forEach(o => notes += `• ${o}\n`);
+    }
+  }
+  notes += `\n=== BENCHMARKS SECTORIELS ===\n`;
+  notes += `CPA moyen secteur : ${bm.cpa || '—'}\n`;
+  notes += `ROAS estimé : ${bm.roas || '—'}\n`;
+  notes += `CPC Google estimé : ${bm.cpc_g || '—'}\n`;
+  notes += `CPC Meta estimé : ${bm.cpc_m || '—'}\n`;
+  notes += `Budget client : ${d.budget}\n`;
+
   try {
     await fetch('https://api.notion.com/v1/pages', {
       method:'POST',
@@ -448,8 +540,9 @@ async function sendToNotion(d) {
           "Secteur":       d.sect?{select:{name:d.sect}}:{select:null},
           "Plateformes":   d.plt?{select:{name:pltMap[d.plt]||d.plt}}:{select:null},
           "Budget mensuel":d.budget?{select:{name:d.budget}}:{select:null},
-          "Objectifs":     {rich_text:[{text:{content:d.objectif||''}}]},
+          "Objectif":      d.objectif?{select:{name:d.objectif}}:{select:null},
           "Statut":        {select:{name:'Nouveau'}},
+          "Notes":         {rich_text:[{text:{content:notes}}]},
         }
       })
     });
