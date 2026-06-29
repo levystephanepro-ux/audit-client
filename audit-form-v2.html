@@ -500,52 +500,57 @@ async function sendToNotion(d) {
   const ps = d.pagespeed;
   const bm = d.benchmarks || {};
 
-  // Construire les notes enrichies
+  // Notes sans caractères spéciaux pour compatibilité
   let notes = '';
   if(ps) {
     notes += `=== ANALYSE SITE ===\n`;
     notes += `Score Performance Mobile : ${ps.perf}/100\n`;
     notes += `Score SEO : ${ps.seo}/100\n`;
-    notes += `Score Accessibilité : ${ps.accessibility}/100\n`;
+    notes += `Score Accessibilite : ${ps.accessibility}/100\n`;
     notes += `FCP : ${ps.fcp} | LCP : ${ps.lcp} | CLS : ${ps.cls}\n`;
-    notes += `HTTPS : ${ps.https ? 'Oui ✓' : 'Non ✗'}\n`;
-    notes += `Mobile : ${ps.mobile ? 'Compatible ✓' : 'Problèmes ⚠️'}\n`;
+    notes += `HTTPS : ${ps.https ? 'Oui' : 'Non'}\n`;
+    notes += `Mobile : ${ps.mobile ? 'Compatible' : 'Problemes'}\n`;
     if(ps.opportunities?.length > 0) {
-      notes += `\nAméliorations prioritaires :\n`;
-      ps.opportunities.forEach(o => notes += `• ${o}\n`);
+      notes += `\nAmeliorations prioritaires :\n`;
+      ps.opportunities.forEach(o => notes += `- ${o}\n`);
     }
   }
   notes += `\n=== BENCHMARKS SECTORIELS ===\n`;
-  notes += `CPA moyen secteur : ${bm.cpa || '—'}\n`;
-  notes += `ROAS estimé : ${bm.roas || '—'}\n`;
-  notes += `CPC Google estimé : ${bm.cpc_g || '—'}\n`;
-  notes += `CPC Meta estimé : ${bm.cpc_m || '—'}\n`;
+  notes += `CPA moyen secteur : ${bm.cpa || ''}\n`;
+  notes += `ROAS estime : ${bm.roas || ''}\n`;
+  notes += `CPC Google estime : ${bm.cpc_g || ''}\n`;
+  notes += `CPC Meta estime : ${bm.cpc_m || ''}\n`;
   notes += `Budget client : ${d.budget}\n`;
+  notes += `Objectif : ${d.objectif}\n`;
+  notes += `Site : ${d.url}\n`;
+
+  // Propriétés — "Nom" est la colonne titre de CETTE base
+  const props = {
+    "Nom": {title:[{text:{content:d.nom||'Sans nom'}}]},
+  };
+  // Ajouter colonnes optionnelles sans erreur si elles n'existent pas
+  if(d.email)    props["Email"]          = {email: d.email};
+  if(d.url)      props["Site web"]       = {url: d.url};
+  if(d.ent)      props["Entreprise"]     = {rich_text:[{text:{content:d.ent}}]};
+  if(d.sect)     props["Secteur"]        = {select:{name:d.sect}};
+  if(d.plt)      props["Plateformes"]    = {select:{name:pltMap[d.plt]||d.plt}};
+  if(d.budget)   props["Budget mensuel"] = {select:{name:d.budget}};
+  if(d.objectif) props["Objectif"]       = {select:{name:d.objectif}};
+  if(notes)      props["Notes"]          = {rich_text:[{text:{content:notes.slice(0,1900)}}]};
 
   try {
-    await fetch('https://api.notion.com/v1/pages', {
+    const res = await fetch('https://api.notion.com/v1/pages', {
       method:'POST',
       headers:{
         'Authorization':'Bearer '+NOTION_TOKEN,
         'Content-Type':'application/json',
         'Notion-Version':'2022-06-28'
       },
-      body: JSON.stringify({
-        parent:{database_id: NOTION_DB},
-        properties:{
-          "Nom complet":   {title:[{text:{content:d.nom||'Sans nom'}}]},
-          "Email":         {email: d.email||null},
-          "Site web":      {url: d.url||null},
-          "Entreprise":    {rich_text:[{text:{content:d.ent||''}}]},
-          "Secteur":       d.sect?{select:{name:d.sect}}:{select:null},
-          "Plateformes":   d.plt?{select:{name:pltMap[d.plt]||d.plt}}:{select:null},
-          "Budget mensuel":d.budget?{select:{name:d.budget}}:{select:null},
-          "Objectif":      d.objectif?{select:{name:d.objectif}}:{select:null},
-          "Statut":        {select:{name:'Nouveau'}},
-          "Notes":         {rich_text:[{text:{content:notes}}]},
-        }
-      })
+      body: JSON.stringify({parent:{database_id:NOTION_DB}, properties:props})
     });
+    const json = await res.json();
+    if(!res.ok) console.log('Notion error:', JSON.stringify(json));
+    else console.log('Notion OK - fiche créée:', json.id);
   } catch(e){ console.log('Notion error:', e); }
 }
 
