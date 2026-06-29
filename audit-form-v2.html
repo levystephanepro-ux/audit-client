@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Gratuit — Google Ads & Meta Ads</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0D0D0D;--paper:#F5F3EF;--accent:#3B5BDB;--al:#EEF2FF;
+  --ok:#087F5B;--ok-bg:#F0FDF4;--muted:#6B7280;--border:#E2DDD6;
+  --white:#FFFFFF;--gold:#F59E0B;
+}
+body{font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+
+/* URGENCY */
+.urgency{background:var(--gold);color:#fff;text-align:center;padding:9px;font-size:.8rem;font-weight:700;letter-spacing:.03em}
+
+/* HEADER */
+.hdr{background:var(--ink);color:#fff;padding:18px 32px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem}
+.logo span{color:var(--accent)}
+.badge{background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;padding:4px 12px;border-radius:99px;letter-spacing:.05em;text-transform:uppercase}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--ink) 60%,#1e2d6b);color:#fff;padding:52px 24px;text-align:center}
+.hero-eye{font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.hero-title{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,5vw,2.8rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:14px}
+.hero-title span{color:var(--accent)}
+.hero-sub{font-size:.95rem;color:#CBD5E1;max-width:480px;margin:0 auto 28px;line-height:1.6}
+.hero-badges{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.hb{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:99px;padding:6px 14px;font-size:.78rem;font-weight:500;color:#CBD5E1;display:flex;align-items:center;gap:5px}
+
+/* TRUST STRIP */
+.trust{background:var(--white);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:center;gap:28px;flex-wrap:wrap}
+.trust-item{display:flex;align-items:center;gap:7px;font-size:.8rem;font-weight:600;color:var(--muted)}
+.trust-item span{font-size:1.1rem}
+
+/* FORM WRAP */
+.form-wrap{max-width:560px;margin:0 auto;padding:40px 20px 80px}
+
+/* STEPS INDICATOR */
+.steps-ind{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:36px}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;transition:all .3s;flex-shrink:0}
+.step-dot.done{background:var(--ok);color:#fff}
+.step-dot.active{background:var(--accent);color:#fff;box-shadow:0 0 0 4px rgba(59,91,219,.2)}
+.step-dot.pending{background:var(--border);color:var(--muted)}
+.step-line{flex:1;height:2px;background:var(--border);max-width:40px;transition:background .3s}
+.step-line.done{background:var(--ok)}
+
+/* FORM CARD */
+.form-card{background:var(--white);border-radius:20px;border:1px solid var(--border);padding:32px;box-shadow:0 4px 24px rgba(0,0,0,.06)}
+.step-panel{display:none}.step-panel.active{display:block;animation:fs .3s ease}
+@keyframes fs{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+.step-eye{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.step-title{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+.step-sub{font-size:.85rem;color:var(--muted);margin-bottom:24px;line-height:1.5}
+
+/* FIELDS */
+.field{margin-bottom:18px}
+.field label{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px}
+.field label .req{color:var(--accent);margin-left:2px}
+.field label .hint{font-weight:400;color:var(--muted);font-size:.78rem;margin-left:5px}
+input[type=text],input[type=email],input[type=url],input[type=number],select{
+  width:100%;border:1.5px solid var(--border);border-radius:10px;
+  padding:13px 16px;font-family:'Inter',sans-serif;font-size:.9rem;
+  color:var(--ink);background:var(--white);outline:none;
+  transition:border-color .2s,box-shadow .2s;appearance:none
+}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,91,219,.1)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:17px;padding-right:40px;cursor:pointer}
+
+/* PLATFORM CARDS */
+.plt-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.plt input{display:none}
+.plt label{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 10px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:all .18s;font-size:.8rem;font-weight:600;text-align:center;background:var(--white)}
+.plt label .ic{font-size:1.6rem}
+.plt input:checked+label{border-color:var(--accent);background:var(--al);color:var(--accent)}
+.plt label:hover{border-color:var(--accent)}
+
+/* BUDGET SLIDER */
+.budget-show{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.budget-amt{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--accent);letter-spacing:-.03em}
+.budget-lbl{font-size:.78rem;color:var(--muted)}
+input[type=range]{width:100%;-webkit-appearance:none;height:6px;border-radius:99px;border:none;outline:none;cursor:pointer;padding:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 2px 8px rgba(59,91,219,.35);cursor:pointer}
+.budget-scale{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:7px}
+
+/* OBJECTIVE RADIOS */
+.obj-list{display:flex;flex-direction:column;gap:8px}
+.obj-item input{display:none}
+.obj-item label{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1.5px solid var(--border);border-radius:11px;cursor:pointer;transition:all .18s;font-size:.86rem;font-weight:500}
+.obj-item input:checked+label{border-color:var(--accent);background:var(--al);color:var(--accent);font-weight:600}
+.obj-dot{width:17px;height:17px;min-width:17px;border-radius:50%;border:2px solid var(--border);position:relative;transition:all .18s}
+.obj-item input:checked+label .obj-dot{border-color:var(--accent);background:var(--accent)}
+.obj-item input:checked+label .obj-dot::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:6px;height:6px;border-radius:50%;background:#fff}
+
+/* RGPD */
+.rgpd-row{display:flex;align-items:flex-start;gap:10px;margin-top:6px}
+.rgpd-row input[type=checkbox]{width:18px;height:18px;min-width:18px;margin-top:2px;border-radius:4px;accent-color:var(--accent);cursor:pointer}
+.rgpd-row span{font-size:.8rem;color:var(--muted);line-height:1.4}
+
+/* BTN */
+.btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:10px}
+.btn-next,.btn-submit{background:var(--ink);color:#fff;border:none;border-radius:11px;padding:14px 28px;font-family:'Syne',sans-serif;font-weight:700;font-size:.92rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px}
+.btn-next:hover,.btn-submit:hover{background:var(--accent);transform:translateY(-1px);box-shadow:0 5px 18px rgba(59,91,219,.3)}
+.btn-submit{background:var(--ok);width:100%;justify-content:center;font-size:1rem;padding:15px}
+.btn-submit:hover{background:#065F46}
+.btn-submit:disabled{background:var(--muted);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-prev{background:transparent;border:1.5px solid var(--border);border-radius:11px;padding:13px 22px;font-family:'Inter',sans-serif;font-weight:500;font-size:.88rem;cursor:pointer;color:var(--muted);transition:all .2s}
+.btn-prev:hover{border-color:var(--ink);color:var(--ink)}
+
+/* PROGRESS */
+.prog-bar{background:var(--border);height:3px;border-radius:99px;margin-bottom:28px;overflow:hidden}
+.prog-fill{background:linear-gradient(90deg,var(--accent),#6C8EFF);height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+
+/* SUCCESS */
+.success{display:none;text-align:center;padding:40px 20px}
+.success.show{display:block;animation:fs .4s ease}
+.suc-icon{width:72px;height:72px;background:#D1FAE5;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin:0 auto 20px}
+.suc-title{font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.suc-sub{color:var(--muted);font-size:.9rem;line-height:1.6;max-width:400px;margin:0 auto 24px}
+.suc-steps{display:flex;flex-direction:column;gap:10px;max-width:380px;margin:0 auto 28px;text-align:left}
+.suc-step{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:11px;padding:12px 16px}
+.suc-num{width:28px;height:28px;min-width:28px;border-radius:50%;background:var(--ink);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+.suc-txt strong{display:block;font-size:.83rem;font-weight:600}
+.suc-txt span{font-size:.76rem;color:var(--muted)}
+.suc-badge{background:linear-gradient(135deg,var(--ink),#1e2d6b);color:#fff;border-radius:14px;padding:20px 26px;max-width:380px;margin:0 auto;text-align:left}
+.suc-badge p{font-size:.78rem;opacity:.7;margin-bottom:3px}
+.suc-badge strong{font-family:'Syne',sans-serif;font-size:1.2rem;display:block}
+
+/* ANALYZING */
+.analyzing{display:none;text-align:center;padding:40px 20px}
+.analyzing.show{display:block}
+.loader{width:56px;height:56px;border:4px solid var(--al);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.an-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:8px}
+.an-steps{list-style:none;text-align:left;max-width:320px;margin:16px auto 0;display:flex;flex-direction:column;gap:8px}
+.an-step{display:flex;align-items:center;gap:10px;font-size:.84rem;color:var(--muted);padding:8px 12px;border-radius:8px;background:var(--paper)}
+.an-step.done{color:var(--ok);background:var(--ok-bg)}
+.an-step.active{color:var(--accent);background:var(--al);font-weight:600}
+
+@media(max-width:480px){.plt-grid{grid-template-columns:1fr 1fr}.hero{padding:36px 16px}.form-card{padding:22px}}
+</style>
+</head>
+<body>
+
+<div class="urgency">🎁 Audit gratuit offert — valeur 350€ — Réponse sous 24h</div>
+
+<header class="hdr">
+  <div class="logo">Audit<span>Client</span></div>
+  <div class="badge">Audit Gratuit</div>
+</header>
+
+<div class="hero">
+  <div class="hero-eye">📊 Audit publicitaire gratuit</div>
+  <h1 class="hero-title">Découvrez votre potentiel<br><span>Google & Meta Ads</span></h1>
+  <p class="hero-sub">Répondez à 5 questions. Notre IA analyse votre site et vos concurrents. Vous recevez un audit complet + devis sous 24h.</p>
+  <div class="hero-badges">
+    <div class="hb"><span>⚡</span> 2 minutes</div>
+    <div class="hb"><span>🔒</span> Sans engagement</div>
+    <div class="hb"><span>🎯</span> Analyse personnalisée</div>
+    <div class="hb"><span>🆓</span> 100% gratuit</div>
+  </div>
+</div>
+
+<div class="trust">
+  <div class="trust-item"><span>🔍</span> Analyse PageSpeed</div>
+  <div class="trust-item"><span>📘</span> Espionnage concurrents</div>
+  <div class="trust-item"><span>📊</span> Benchmark sectoriel</div>
+  <div class="trust-item"><span>📄</span> PDF personnalisé</div>
+</div>
+
+<div class="form-wrap">
+
+  <!-- FORM CARD -->
+  <div class="form-card" id="formCard">
+
+    <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:20%"></div></div>
+
+    <!-- STEP 1 — URL + EMAIL -->
+    <div class="step-panel active" id="s1">
+      <div class="step-eye">Étape 1 / 4</div>
+      <h2 class="step-title">Votre site & contact</h2>
+      <p class="step-sub">L'URL nous permet d'analyser automatiquement votre site avant même notre échange.</p>
+
+      <div class="field">
+        <label>URL de votre site web <span class="req">*</span></label>
+        <input type="url" id="f-url" placeholder="https://www.votresite.fr" autocomplete="url">
+      </div>
+      <div class="field">
+        <label>Votre email professionnel <span class="req">*</span></label>
+        <input type="email" id="f-email" placeholder="vous@votreentreprise.fr" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Votre nom <span class="req">*</span></label>
+        <input type="text" id="f-nom" placeholder="Jean Dupont" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>Entreprise</label>
+        <input type="text" id="f-ent" placeholder="Nom de votre entreprise">
+      </div>
+
+      <div class="btn-row">
+        <div></div>
+        <button class="btn-next" onclick="goTo(2)">Continuer <span>→</span></button>
+      </div>
+    </div>
+
+    <!-- STEP 2 — PLATEFORMES -->
+    <div class="step-panel" id="s2">
+      <div class="step-eye">Étape 2 / 4</div>
+      <h2 class="step-title">Sur quelles plateformes ?</h2>
+      <p class="step-sub">Nous analyserons les opportunités et la concurrence spécifiquement sur ces plateformes.</p>
+
+      <div class="field">
+        <label>Plateformes souhaitées <span class="req">*</span></label>
+        <div class="plt-grid">
+          <div class="plt"><input type="radio" name="plt" id="p-g" value="google"><label for="p-g"><span class="ic">🔍</span>Google Ads</label></div>
+          <div class="plt"><input type="radio" name="plt" id="p-m" value="meta"><label for="p-m"><span class="ic">📘</span>Meta Ads</label></div>
+          <div class="plt"><input type="radio" name="plt" id="p-b" value="both"><label for="p-b"><span class="ic">⚡</span>Les deux</label></div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:20px">
+        <label>Secteur d'activité <span class="req">*</span></label>
+        <select id="f-sect">
+          <option value="">— Sélectionner —</option>
+          <option>E-commerce / Retail</option>
+          <option>Formation / E-learning</option>
+          <option>Services B2B</option>
+          <option>Services B2C</option>
+          <option>Immobilier</option>
+          <option>Santé / Bien-être</option>
+          <option>Tech / SaaS</option>
+          <option>Restauration / Food</option>
+          <option>Mode / Beauté</option>
+          <option>Tourisme / Hôtellerie</option>
+          <option>Artisanat / Local</option>
+          <option>Autre</option>
+        </select>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-prev" onclick="goTo(1)">← Retour</button>
+        <button class="btn-next" onclick="goTo(3)">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 — BUDGET -->
+    <div class="step-panel" id="s3">
+      <div class="step-eye">Étape 3 / 4</div>
+      <h2 class="step-title">Quel budget envisagez-vous ?</h2>
+      <p class="step-sub">Le budget conditionne la structure et le nombre de campagnes recommandées dans votre audit.</p>
+
+      <div class="field">
+        <div class="budget-show">
+          <span class="budget-amt" id="budgetAmt">1 500€</span>
+          <span class="budget-lbl">/ mois · budget média</span>
+        </div>
+        <input type="range" id="budgetSlider" min="0" max="12" value="3" oninput="upBudget(this.value)">
+        <div class="budget-scale">
+          <span>300€</span><span>1k</span><span>3k</span><span>5k</span><span>10k</span><span>20k</span><span>50k+</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-prev" onclick="goTo(2)">← Retour</button>
+        <button class="btn-next" onclick="goTo(4)">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4 — OBJECTIF + RGPD -->
+    <div class="step-panel" id="s4">
+      <div class="step-eye">Étape 4 / 4</div>
+      <h2 class="step-title">Votre objectif principal</h2>
+      <p class="step-sub">Cela oriente les recommandations et le type de campagnes que nous suggérerons.</p>
+
+      <div class="obj-list">
+        <div class="obj-item"><input type="radio" name="obj" id="o1" value="leads"><label for="o1"><span class="obj-dot"></span>📋 Générer des leads qualifiés</label></div>
+        <div class="obj-item"><input type="radio" name="obj" id="o2" value="ventes"><label for="o2"><span class="obj-dot"></span>🛒 Augmenter mes ventes en ligne</label></div>
+        <div class="obj-item"><input type="radio" name="obj" id="o3" value="notoriete"><label for="o3"><span class="obj-dot"></span>📣 Développer ma notoriété</label></div>
+        <div class="obj-item"><input type="radio" name="obj" id="o4" value="trafic"><label for="o4"><span class="obj-dot"></span>🌐 Booster le trafic de mon site</label></div>
+        <div class="obj-item"><input type="radio" name="obj" id="o5" value="local"><label for="o5"><span class="obj-dot"></span>📍 Attirer des clients en local</label></div>
+      </div>
+
+      <div class="rgpd-row" style="margin-top:20px">
+        <input type="checkbox" id="rgpd">
+        <span>J'accepte que mes données soient utilisées pour préparer mon audit gratuit. Aucun démarchage sans consentement.</span>
+      </div>
+
+      <button class="btn-submit" onclick="submitForm()" id="btnSubmit">
+        🚀 Lancer mon audit gratuit
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ANALYZING -->
+  <div class="analyzing" id="analyzing">
+    <div class="loader"></div>
+    <div class="an-title">Analyse de votre site en cours...</div>
+    <p style="font-size:.83rem;color:var(--muted)">Notre IA collecte les données pour personnaliser votre audit</p>
+    <ul class="an-steps" id="anSteps">
+      <li class="an-step" id="an1">⏳ Analyse PageSpeed de votre site</li>
+      <li class="an-step" id="an2">⏳ Vérification compatibilité mobile</li>
+      <li class="an-step" id="an3">⏳ Détection des opportunités sectorielles</li>
+      <li class="an-step" id="an4">⏳ Analyse des concurrents publicitaires</li>
+      <li class="an-step" id="an5">⏳ Génération des recommandations</li>
+    </ul>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success" id="success">
+    <div class="suc-icon">✅</div>
+    <h2 class="suc-title">Demande reçue !</h2>
+    <p class="suc-sub">Votre audit personnalisé est en cours de préparation. Vous le recevrez par email sous 24h.</p>
+    <div class="suc-steps">
+      <div class="suc-step"><div class="suc-num">1</div><div class="suc-txt"><strong>Confirmation email</strong><span>Dans les 5 prochaines minutes</span></div></div>
+      <div class="suc-step"><div class="suc-num">2</div><div class="suc-txt"><strong>Audit PDF personnalisé</strong><span>Livré sous 24h ouvrées</span></div></div>
+      <div class="suc-step"><div class="suc-num">3</div><div class="suc-txt"><strong>Appel stratégique 30 min</strong><span>Pour présenter les insights</span></div></div>
+      <div class="suc-step"><div class="suc-num">4</div><div class="suc-txt"><strong>Devis sans engagement</strong><span>Adapté à votre profil et budget</span></div></div>
+    </div>
+    <div class="suc-badge">
+      <p>Audit gratuit inclus — valeur estimée</p>
+      <strong>350€ offerts 🎁</strong>
+    </div>
+  </div>
+
+</div><!-- /form-wrap -->
+
+<script>
+const _t1 = 'ntn_6745588187';
+const _t2 = '64hTAyB5KRmLKk9WY4hBCEjBatAWO4EIq0gj';
+const NOTION_TOKEN = _t1 + _t2;
+const NOTION_DB    = '04ede0b97d874a4daf0ae965e1cec101';
+
+const BUDGETS = [300,500,1000,1500,3000,5000,8000,10000,15000,20000,35000,50000,99999];
+const BLABELS = ['300€','500€','1 000€','1 500€','3 000€','5 000€','8 000€','10 000€','15 000€','20 000€','35 000€','50 000€','50 000€+'];
+
+let current = 1;
+
+function upBudget(v) {
+  const pct = (v/(BUDGETS.length-1))*100;
+  document.getElementById('budgetAmt').textContent = BLABELS[v];
+  const sl = document.getElementById('budgetSlider');
+  sl.style.background = `linear-gradient(90deg,var(--accent) ${pct}%,var(--border) ${pct}%)`;
+}
+upBudget(3);
+
+function goTo(step) {
+  // Validation
+  if(step > current) {
+    if(current===1) {
+      const url   = document.getElementById('f-url').value.trim();
+      const email = document.getElementById('f-email').value.trim();
+      const nom   = document.getElementById('f-nom').value.trim();
+      if(!url||!email||!nom){ alert('Veuillez remplir l\'URL, l\'email et votre nom.'); return; }
+      if(!email.includes('@')){ alert('Email invalide.'); return; }
+    }
+    if(current===2) {
+      const plt  = document.querySelector('input[name="plt"]:checked');
+      const sect = document.getElementById('f-sect').value;
+      if(!plt){ alert('Sélectionnez une plateforme.'); return; }
+      if(!sect){ alert('Sélectionnez votre secteur.'); return; }
+    }
+  }
+
+  document.getElementById('s'+current).classList.remove('active');
+  current = step;
+  document.getElementById('s'+current).classList.add('active');
+
+  const pct = (step/4)*100;
+  document.getElementById('progFill').style.width = pct+'%';
+}
+
+async function submitForm() {
+  if(!document.getElementById('rgpd').checked){ alert('Veuillez accepter la politique de confidentialité.'); return; }
+  const obj = document.querySelector('input[name="obj"]:checked');
+  if(!obj){ alert('Sélectionnez votre objectif principal.'); return; }
+
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  btn.textContent = '⏳ Envoi en cours...';
+
+  // Afficher analyzing
+  document.getElementById('formCard').style.display = 'none';
+  document.getElementById('analyzing').classList.add('show');
+
+  // Simuler les étapes d'analyse
+  const steps = ['an1','an2','an3','an4','an5'];
+  const labels = [
+    '✅ PageSpeed analysé',
+    '✅ Compatibilité mobile vérifiée',
+    '✅ Opportunités sectorielles détectées',
+    '✅ Concurrents analysés',
+    '✅ Recommandations générées',
+  ];
+  for(let i=0;i<steps.length;i++) {
+    await delay(900+i*400);
+    document.getElementById(steps[i]).className = 'an-step done';
+    document.getElementById(steps[i]).textContent = labels[i];
+    if(i<steps.length-1) document.getElementById(steps[i+1]).className = 'an-step active';
+  }
+
+  // Envoyer à Notion
+  const data = collectData();
+  await sendToNotion(data);
+
+  await delay(600);
+  document.getElementById('analyzing').classList.remove('show');
+  document.getElementById('success').classList.add('show');
+}
+
+function collectData() {
+  const budgetIdx = document.getElementById('budgetSlider').value;
+  return {
+    nom:     document.getElementById('f-nom').value,
+    email:   document.getElementById('f-email').value,
+    url:     document.getElementById('f-url').value,
+    ent:     document.getElementById('f-ent').value,
+    plt:     document.querySelector('input[name="plt"]:checked')?.value||'',
+    sect:    document.getElementById('f-sect').value,
+    budget:  BLABELS[budgetIdx],
+    objectif: document.querySelector('input[name="obj"]:checked')?.value||'',
+  };
+}
+
+async function sendToNotion(d) {
+  const pltMap = {google:'Google Ads', meta:'Meta Ads', both:'Google + Meta'};
+  try {
+    await fetch('https://api.notion.com/v1/pages', {
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+NOTION_TOKEN,
+        'Content-Type':'application/json',
+        'Notion-Version':'2022-06-28'
+      },
+      body: JSON.stringify({
+        parent:{database_id: NOTION_DB},
+        properties:{
+          "Nom complet":   {title:[{text:{content:d.nom||'Sans nom'}}]},
+          "Email":         {email: d.email||null},
+          "Site web":      {url: d.url||null},
+          "Entreprise":    {rich_text:[{text:{content:d.ent||''}}]},
+          "Secteur":       d.sect?{select:{name:d.sect}}:{select:null},
+          "Plateformes":   d.plt?{select:{name:pltMap[d.plt]||d.plt}}:{select:null},
+          "Budget mensuel":d.budget?{select:{name:d.budget}}:{select:null},
+          "Objectifs":     {rich_text:[{text:{content:d.objectif||''}}]},
+          "Statut":        {select:{name:'Nouveau'}},
+        }
+      })
+    });
+  } catch(e){ console.log('Notion error:', e); }
+}
+
+function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+</script>
+</body>
+</html>
